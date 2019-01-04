@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+retry = "~=0.9.0"
+python-dotenv = "~=0.10.0"
+aiohttp = "~=3.5.0"
+sanic = "~=18.12.0"
+gino = "~=0.8.0"
+alembic = "~=1.0.0"
+
+
+[dev-packages]
+
+
+[requires]
+python_version = "3.6"
+
+[pipenv]
+allow_prereleases = true
