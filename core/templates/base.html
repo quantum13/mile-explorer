@@ -3,15 +3,15 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="{{ meta_descr }}">
-    <title>{{ meta_title }}</title>
+    <meta name="description" content="{% block meta_descr %}{% endblock %}">
+    <title>{% block meta_title %}{% endblock %}</title>
 
     <!-- Bootstrap core CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
           integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
 
     <style>
-        {{ meta_style }}
+        {% block meta_style %}{% endblock %}
     </style>
     <!-- Custom styles for this template -->
     {#    <link href="starter-template.css" rel="stylesheet">#}
@@ -29,34 +29,20 @@
             <li class="nav-item">
                 <a class="nav-link" href="/transactions">Transactions</a>
             </li>
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="dropdown-menu-blocks" data-toggle="dropdown">Blocks</a>
-                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-menu-blocks">
-                    <a class="dropdown-item" href="/blocks">All</a>
-                    <a class="dropdown-item" href="/blocks/non_empty">Non empty</a>
-                </div>
+            <li class="nav-item">
+                <a class="nav-link" href="/blocks">Blocks</a>
             </li>
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="dropdown-menu-wallets" data-toggle="dropdown">Wallets</a>
-                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-menu-wallets">
-                    <a class="dropdown-item" href="/wallets">By creation date</a>
-                    <a class="dropdown-item" href="/wallets/top/miles">Top wallets by miles</a>
-                    <a class="dropdown-item" href="/wallets/top/xdr">Top wallets by xdr</a>
-                    <a class="dropdown-item" href="/wallets/top/miles/staked">Top wallets by miles staked</a>
-                    <a class="dropdown-item" href="/wallets/top/xdr/staked">Top wallets by miles staked</a>
-                </div>
+            <li class="nav-item">
+                <a class="nav-link" href="/wallets">Wallets</a>
             </li>
+
         </ul>
     </div>
 </nav>
 
-<main role="main" class="container">
+<main role="main" class="container" style="margin-top: 80px">
 
-    <div class="starter-template">
-        <h1>Bootstrap starter template</h1>
-        <p class="lead">Use this document as a way to quickly start any new project.<br> All you get is this text and a
-            mostly barebones HTML document.</p>
-    </div>
+    {% block content %}{% endblock %}
 
 </main><!-- /.container -->
 

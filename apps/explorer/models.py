@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 
-from core.common import utcnow
+from apps.mileapi.constants import TX_TYPES_HUMAN
 from core.di import db
 
 
@@ -87,3 +87,6 @@ class Transaction(db.Model):
 
     def __str__(self):
         return self.pub_key
+
+    def human_type(self):
+        return TX_TYPES_HUMAN.get(self.type, '')

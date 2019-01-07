@@ -15,7 +15,7 @@ from apps.mileapi.api import get_current_block, get_block, get_wallet
 from apps.mileapi.constants import TX_TYPES, TransferAssetsTransaction, RegisterNodeTransactionWithAmount
 from core.collections import unique_deque
 from core.common import utcnow
-from core.config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_POOL_MIN_SIZE, DB_POOL_MAX_SIZE, TASKS_LIMIT, \
+from core.config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, INDEXER_DB_POOL_MIN_SIZE, INDEXER_DB_POOL_MAX_SIZE, INDEXER_TASKS_LIMIT, \
     GENESIS_BLOCK
 from core.di import db
 from core.logging import setup_logging
@@ -43,8 +43,8 @@ def start():
         db.set_bind(
             dsn,
             echo=False,
-            min_size=DB_POOL_MIN_SIZE,
-            max_size=DB_POOL_MAX_SIZE,
+            min_size=INDEXER_DB_POOL_MIN_SIZE,
+            max_size=INDEXER_DB_POOL_MAX_SIZE,
             loop=loop,
         )
     )
@@ -121,7 +121,7 @@ async def handle_fetch_tasks(fetch_tasks: deque):
 
 
 def _fill_futures(futures: list, fetch_tasks: deque):
-    while len(futures) < TASKS_LIMIT and len(fetch_tasks) > 0:
+    while len(futures) < INDEXER_TASKS_LIMIT and len(fetch_tasks) > 0:
         task_type, item_id = fetch_tasks.popleft()
         if task_type==TASK_BLOCK:
             coro = _process_block(item_id, fetch_tasks)
@@ -272,7 +272,7 @@ async def _process_block(block_id, fetch_tasks: deque):
         tx = Transaction(
             digest=f"{tx_data['digest']}_{block_id}_{i}",
             block_id=block.id,
-            num_in_block=-1,
+            num_in_block=-len(list(data['fee-transactions']))+i,
             timestamp=block.timestamp,
             global_num=int(tx_data.get('transaction-id', 0)),
             is_fee=True,
@@ -281,10 +281,15 @@ async def _process_block(block_id, fetch_tasks: deque):
             signature=tx_data['signature'],
             description=tx_data.get('description', '')
         )
-        txs.append(tx)
 
         if not _fill_tx_type_specific_data(tx, tx_data, block):
             block.reindex_needed = True
+
+        if tx.type == TransferAssetsTransaction:
+            if tx.xdr or tx.mile:
+                txs.append(tx)
+        else:
+            logger.warning(f"Unknown type in fee txs: {tx.type}")
 
         tx.wallet_from = None
 
