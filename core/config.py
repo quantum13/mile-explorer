@@ -24,3 +24,4 @@ else:
     assert False
 
 
+API_VERIFY_SSL = False

@@ -54,6 +54,7 @@ def start():
     last_processed_block_id = loop.run_until_complete(process_missing_blocks(fetch_tasks))
     asyncio.ensure_future(check_new_blocks(fetch_tasks))
     asyncio.ensure_future(handle_fetch_tasks(fetch_tasks))
+    asyncio.ensure_future(check_missing_wallets(fetch_tasks))
     loop.run_forever()
 
 
@@ -65,10 +66,42 @@ async def check_new_blocks(fetch_tasks: deque):
             last_block = await get_current_block()
             for block_id in range(last_processed_block_id+1, last_block+1):
                 fetch_tasks.append( (TASK_BLOCK, block_id) )
-                logger.info(f"Queued block: {block_id}")
+                logger.info(f"Queued block: {block_id}, tasks: {_count_tasks(fetch_tasks)}")
             last_processed_block_id = last_block
         except:
             pass
+
+
+async def check_missing_wallets(fetch_tasks: deque):
+    """since wallets added not in tx(deadlocks), on crash they could not be written with block """
+    while True:
+        try:
+
+            pub_keys = await db.all("""
+                select tx_wallets.pub_key, ts from (
+                    select pub_key, min(ts) as ts from (
+                        select wallet_from as pub_key, min(timestamp) as ts from transactions where wallet_from is not null group by wallet_from
+                        union 
+                        select wallet_to as pub_key, min(timestamp) as ts from transactions where wallet_to is not null group by wallet_to
+                    ) tx_wallets_inner
+                    group by pub_key
+                ) tx_wallets left join wallets on tx_wallets.pub_key=wallets.pub_key
+                where wallets.pub_key is null
+            """)
+
+            await _process_txs_wallets(fetch_tasks, pub_keys_with_ts=pub_keys)
+
+        except:
+            pass
+
+        await asyncio.sleep(60)
+
+
+def _count_tasks(fetch_tasks: deque):
+    tasks_counts = {}
+    for task in fetch_tasks:
+        tasks_counts[task[0]] = tasks_counts.get(task[0], 0) + 1
+    return tasks_counts
 
 
 async def handle_fetch_tasks(fetch_tasks: deque):
@@ -117,7 +150,7 @@ async def process_missing_blocks(fetch_tasks: deque):
     for pub_key in wallets:
         fetch_tasks.append( (TASK_WALLET, pub_key) )
 
-    logger.info(len(fetch_tasks))
+    logger.info(f"tasks: {_count_tasks(fetch_tasks)}")
 
     return last_block
 
@@ -153,17 +186,17 @@ async def _check_genesis_block(fetch_tasks: deque):
                 description=''
             )
             txs.append(tx)
-            line = line.lower().split()
-            if line[0] == 'transfer':
+            line = line.split()
+            if line[0].lower() == 'transfer':
                 tx.type = TransferAssetsTransaction
                 tx.wallet_to = line[2]
-                if line[1] == 'xdr':
+                if line[1].lower() == 'xdr':
                     tx.xdr = Decimal(line[3])
-                elif line[1] == 'mile':
+                elif line[1].lower() == 'mile':
                     tx.mile = Decimal(line[3])
                 else:
                     assert False
-            elif line[0] == 'amount-register-node':
+            elif line[0].lower() == 'amount-register-node':
                 tx.type = RegisterNodeTransactionWithAmount
                 tx.wallet_from = line[1]
                 tx.node_address = line[2]
@@ -178,9 +211,7 @@ async def _check_genesis_block(fetch_tasks: deque):
         for tx in txs:
             await tx.create()
 
-        wallet_tasks = await _process_txs_wallets(txs)
-
-    fetch_tasks.extend(wallet_tasks)
+    await _process_txs_wallets(fetch_tasks, txs)
 
 
 async def _process_wallet(pub_key):
@@ -204,12 +235,13 @@ async def _process_wallet(pub_key):
     wallet.node_address = data.get('address')
 
     for balance in data['balance']:
+        assert 'frozen' in balance or 'freezed' in balance
         if balance['code'] == '0':
             wallet.xdr_balance = Decimal(balance['amount'])
-            wallet.xdr_staked = Decimal(balance['frozen'])
+            wallet.xdr_staked = Decimal(balance.get('frozen', balance.get('freezed')))
         elif balance['code'] == '1':
             wallet.mile_balance = Decimal(balance['amount'])
-            wallet.mile_staked = Decimal(balance['frozen'])
+            wallet.mile_staked = Decimal(balance.get('frozen', balance.get('freezed')))
         else:
             logger.error(f"Unknown code: {balance['code']}")
             return True  # for manual processing later
@@ -288,29 +320,32 @@ async def _process_block(block_id, fetch_tasks: deque):
         for tx in txs:
             await tx.create()
 
-        wallet_tasks = await _process_txs_wallets(txs)
-
-    fetch_tasks.extend(wallet_tasks)
+    await _process_txs_wallets(fetch_tasks, txs)
 
     return True
 
 
-async def _process_txs_wallets(txs):
-    fetch_tasks = deque()
-    for tx in txs:
-        for wallet in (tx.wallet_from, tx.wallet_to):
-            if wallet:
-                await db.status(
-                    """
-                        insert into wallets (pub_key, created_at) 
-                        values ($1, $2) on conflict (pub_key) do update set update_needed=true
-                    """,
-                    wallet,
-                    tx.timestamp
-                )
-                fetch_tasks.append( (TASK_WALLET, wallet) )
+async def _process_txs_wallets(fetch_tasks: deque, txs=None, pub_keys_with_ts=None):
+    assert txs is not None or pub_keys_with_ts is not None
 
-    return fetch_tasks
+    if pub_keys_with_ts is None:
+        pub_keys_with_ts = []
+    if txs is not None:
+        for tx in txs:
+            for wallet in (tx.wallet_from, tx.wallet_to):
+                if wallet:
+                    pub_keys_with_ts.append((wallet, tx.timestamp))
+
+    for wallet, ts in pub_keys_with_ts:
+        await db.status(
+            """
+                insert into wallets (pub_key, created_at) 
+                values ($1, $2) on conflict (pub_key) do update set update_needed=true
+            """,
+            wallet,
+            ts
+        )
+        fetch_tasks.append( (TASK_WALLET, wallet) )
 
 
 def _fill_tx_type_specific_data(tx, tx_data, block):

@@ -4,7 +4,7 @@ import json
 
 import aiohttp
 
-from core.config import WEB_WALLET_URL
+from core.config import WEB_WALLET_URL, API_VERIFY_SSL
 
 
 class config:
@@ -32,7 +32,7 @@ class Rpc:
     async def get_url(cls):
 
         if not cls.__urls:
-            cls.__session = aiohttp.ClientSession()
+            cls.__session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=API_VERIFY_SSL))
             atexit.register(lambda: asyncio.get_event_loop().run_until_complete(cls.__session.close()))
 
             cls.__urls = await (await cls.__session.get(config.nodes_url)).json()
