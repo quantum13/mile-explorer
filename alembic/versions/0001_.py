@@ -2,7 +2,7 @@
 
 Revision ID: 0001
 Revises: 
-Create Date: 2019-01-07 14:08:47.804955
+Create Date: 2019-01-07 18:36:39.183406
 
 """
 from alembic import op
@@ -70,7 +70,7 @@ def upgrade():
     sa.Column('node_address', sa.String(length=255), nullable=True),
     sa.PrimaryKeyConstraint('pub_key')
     )
-    op.create_index('transactions__balance_updated_at', 'wallets', ['balance_updated_at'], unique=False)
+    op.create_index('transactions__created_at', 'wallets', ['created_at'], unique=False)
     op.create_index('transactions__mile_balance', 'wallets', ['mile_balance'], unique=False)
     op.create_index('transactions__mile_staked', 'wallets', ['mile_staked'], unique=False)
     op.create_index('transactions__update_needed', 'wallets', ['update_needed'], unique=False)
@@ -86,7 +86,7 @@ def downgrade():
     op.drop_index('transactions__update_needed', table_name='wallets')
     op.drop_index('transactions__mile_staked', table_name='wallets')
     op.drop_index('transactions__mile_balance', table_name='wallets')
-    op.drop_index('transactions__balance_updated_at', table_name='wallets')
+    op.drop_index('transactions__created_at', table_name='wallets')
     op.drop_table('wallets')
     op.drop_index('transactions__to__timestamp', table_name='transactions')
     op.drop_index('transactions__timestamp', table_name='transactions')

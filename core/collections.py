@@ -1,4 +1,5 @@
 from collections import deque
+from typing import Iterable
 
 
 class unique_deque(deque):
@@ -26,6 +27,14 @@ class unique_deque(deque):
         elem = super().pop(i)
         self.items.remove(elem)
         return elem
+
+    def extend(self, iterable: Iterable):
+        for i in iterable:
+            self.append(i)
+
+    def extendleft(self, iterable: Iterable):
+        for i in iterable:
+            self.appendleft(i)
 
     def __contains__(self, item):
         return item in self.items

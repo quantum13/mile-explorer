@@ -14,7 +14,7 @@ class Wallet(db.Model):
     mile_staked = sa.Column(sa.DECIMAL(19, 5), nullable=False, server_default='0')
     xdr_balance = sa.Column(sa.DECIMAL(19, 2), nullable=False, server_default='0')
     xdr_staked = sa.Column(sa.DECIMAL(19, 2), nullable=False, server_default='0')
-    created_at = sa.Column(TIMESTAMP(precision=0, timezone=True), nullable=False, default=utcnow)
+    created_at = sa.Column(TIMESTAMP(precision=0, timezone=True), nullable=False)
     balance_updated_at = sa.Column(TIMESTAMP(precision=0, timezone=True), default=None)
     update_needed = sa.Column(sa.Boolean, nullable=False, default=True, server_default='true')
 
@@ -25,8 +25,9 @@ class Wallet(db.Model):
     _idx2 = db.Index('transactions__xdr_balance', 'xdr_balance')
     _idx3 = db.Index('transactions__mile_staked', 'mile_staked')
     _idx4 = db.Index('transactions__xdr_staked', 'xdr_staked')
-    _idx5 = db.Index('transactions__balance_updated_at', 'balance_updated_at')
+    _idx5 = db.Index('transactions__created_at', 'created_at')
     _idx6 = db.Index('transactions__update_needed', 'update_needed')
+
 
     def __str__(self):
         return self.pub_key

@@ -11,6 +11,8 @@ sanic = "~=18.12.0"
 gino = "~=0.8.0"
 alembic = "~=1.0.0"
 python-dateutil = "~=2.7.0"
+sanic-compress = "~=0.1.0"
+sanic-jinja2 = "~=0.7.0"
 
 
 [dev-packages]

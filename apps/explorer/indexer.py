@@ -12,10 +12,11 @@ from sqlalchemy.engine.url import URL
 
 from apps.explorer.models import Block, Wallet, Transaction
 from apps.mileapi.api import get_current_block, get_block, get_wallet
-from apps.mileapi.constants import TX_TYPES
+from apps.mileapi.constants import TX_TYPES, TransferAssetsTransaction, RegisterNodeTransactionWithAmount
 from core.collections import unique_deque
 from core.common import utcnow
-from core.config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_POOL_MIN_SIZE, DB_POOL_MAX_SIZE, TASKS_LIMIT
+from core.config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_POOL_MIN_SIZE, DB_POOL_MAX_SIZE, TASKS_LIMIT, \
+    GENESIS_BLOCK
 from core.di import db
 from core.logging import setup_logging
 
@@ -103,6 +104,8 @@ def _fill_futures(futures: list, fetch_tasks: deque):
 
 async def process_missing_blocks(fetch_tasks: deque):
 
+    await _check_genesis_block(fetch_tasks)
+
     blocks_ids = {row[0] for row in await Block.select('id').where(Block.reindex_needed==False).gino.all()}
     last_block = await get_current_block()
 
@@ -117,6 +120,67 @@ async def process_missing_blocks(fetch_tasks: deque):
     logger.info(len(fetch_tasks))
 
     return last_block
+
+
+async def _check_genesis_block(fetch_tasks: deque):
+    genesis = await Block.get(0)
+    if genesis:
+        return
+    block = Block(
+        id=0,
+        version=1,
+        previous_block_digest='',
+        merkle_root='',
+        timestamp=datetime(2017, 12, 31, 12, 0, 0).replace(tzinfo=pytz.utc),
+        transactions_count=0,
+        number_of_signers=0,
+        round=0,
+        block_header_digest='',
+        main_signer=''
+    )
+    txs = []
+    with open(GENESIS_BLOCK, 'r') as f:
+        for i, line in enumerate(f):
+            tx = Transaction(
+                digest=f"genesis_{i}",
+                block_id=block.id,
+                num_in_block=i,
+                timestamp=block.timestamp,
+                global_num=0,
+                is_fee=False,
+                fee=0,
+                signature='',
+                description=''
+            )
+            txs.append(tx)
+            line = line.lower().split()
+            if line[0] == 'transfer':
+                tx.type = TransferAssetsTransaction
+                tx.wallet_to = line[2]
+                if line[1] == 'xdr':
+                    tx.xdr = Decimal(line[3])
+                elif line[1] == 'mile':
+                    tx.mile = Decimal(line[3])
+                else:
+                    assert False
+            elif line[0] == 'amount-register-node':
+                tx.type = RegisterNodeTransactionWithAmount
+                tx.wallet_from = line[1]
+                tx.node_address = line[2]
+                tx.xdr = Decimal(line[3])
+            else:
+                assert False
+
+    block.transactions_count = len(txs)
+
+    async with db.transaction():
+        await block.create()
+        for tx in txs:
+            await tx.create()
+
+        wallet_tasks = await _process_txs_wallets(txs)
+
+    fetch_tasks.extend(wallet_tasks)
 
 
 async def _process_wallet(pub_key):
@@ -210,8 +274,6 @@ async def _process_block(block_id, fetch_tasks: deque):
         if not _fill_tx_type_specific_data(tx, tx_data, block):
             block.reindex_needed = True
 
-
-
     async with db.transaction():
         # r = await Wallet.query.gino.all()
         old_block: Block = await Block.get(block.id)
@@ -226,19 +288,29 @@ async def _process_block(block_id, fetch_tasks: deque):
         for tx in txs:
             await tx.create()
 
+        wallet_tasks = await _process_txs_wallets(txs)
+
+    fetch_tasks.extend(wallet_tasks)
+
+    return True
+
+
+async def _process_txs_wallets(txs):
+    fetch_tasks = deque()
     for tx in txs:
         for wallet in (tx.wallet_from, tx.wallet_to):
             if wallet:
                 await db.status(
                     """
                         insert into wallets (pub_key, created_at) 
-                        values ($1, now()) on conflict (pub_key) do update set update_needed=true
+                        values ($1, $2) on conflict (pub_key) do update set update_needed=true
                     """,
-                    wallet
+                    wallet,
+                    tx.timestamp
                 )
                 fetch_tasks.append( (TASK_WALLET, wallet) )
 
-    return True
+    return fetch_tasks
 
 
 def _fill_tx_type_specific_data(tx, tx_data, block):

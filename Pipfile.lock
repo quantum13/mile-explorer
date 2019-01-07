@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "b939280b3bb47467e9123623ba665ea27882165e2fce4195a0c6847da9048c39"
+            "sha256": "b180eaf19bd2c8f3674f8e26b86b57bbad2fd585bbcbc6877f5bc8bae9fa5231"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -165,6 +165,13 @@
             ],
             "version": "==0.6"
         },
+        "jinja2": {
+            "hashes": [
+                "sha256:74c935a1b8bb9a3947c50a54766a969d4846290e1e788ea44c1392163723c3bd",
+                "sha256:f84be1bb0040caca4cea721fcbbbbd61f9be9464ca236387158b0feea01914a4"
+            ],
+            "version": "==2.10"
+        },
         "mako": {
             "hashes": [
                 "sha256:4e02fde57bd4abb5ec400181e4c314f56ac3e49ba4fb8b0d50bba18cb27d25ae"
@@ -282,6 +289,20 @@
             ],
             "index": "pypi",
             "version": "==18.12.0"
+        },
+        "sanic-compress": {
+            "hashes": [
+                "sha256:350123350caad62a6815f70b485fd98b6c3e94c1cdaefc4a192d3075d540522b"
+            ],
+            "index": "pypi",
+            "version": "==0.1.1"
+        },
+        "sanic-jinja2": {
+            "hashes": [
+                "sha256:297d17ce385e59a8ba68791a2df7ee264af073f77ad51e5bb2ecf151b49e8182"
+            ],
+            "index": "pypi",
+            "version": "==0.7.3"
         },
         "six": {
             "hashes": [
