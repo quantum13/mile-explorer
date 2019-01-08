@@ -26,7 +26,7 @@ def start():
     setup_logging('sanic.root', replace=True)
     setup_logging('sanic.error', replace=True)
 
-    app.run(host='0.0.0.0', workers=1, port=8081, debug=False, access_log=False)
+    app.run(host='0.0.0.0', workers=1, port=80, debug=False, access_log=False)
 
 
 
