@@ -7,7 +7,7 @@ from core.logging import setup_logging
 def start():
     setup_logging('sanic.root', replace=True)
     setup_logging('sanic.error', replace=True)
-    app.run(workers=SERVER_WORKERS_COUNT, port=SERVER_PORT, debug=DEBUG)
+    app.run(host='0.0.0.0', workers=SERVER_WORKERS_COUNT, port=SERVER_PORT, debug=DEBUG)
 
 
 
