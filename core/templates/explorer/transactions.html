@@ -57,7 +57,7 @@
             </td>
             <td>{{ tx_value(tx) }}</td>
             <td>
-                <div {% if tx.decription|length>72 %}title="{{ tx.description }}"{% endif %} style="word-break: break-all;">
+                <div {% if tx.description|length>72 %}title="{{ tx.description }}"{% endif %} style="word-break: break-all;">
                     {{ tx.description|truncate(75) }}
                 </div>
             </td>
