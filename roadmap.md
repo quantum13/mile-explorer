@@ -1,10 +1,11 @@
 * Transactions
   - pagination
-    - prev/next/goto date
+    - ~~prev/next/~~ goto date
   - filters
     - fee/no fee
     - with description
     - by wallet
+  - in descr - address with reg node, rate with get rate, etc
 * Transaction page
 * Blocks
   - pagination

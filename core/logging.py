@@ -6,8 +6,7 @@ import logging
 import sys
 import time
 
-from core import di
-from core.config import LOG_TELEGRAM_APP_NAME, LOG_TELEGRAM_CHANNELS, LOG_TELEGRAM_CHANNELS_DEFAULT, LOG_TELEGRAM_TOKEN
+from core import config
 
 
 class FormatterWithTime(logging.Formatter):
@@ -33,13 +32,13 @@ class TelegramHandler(logging.Handler):
 
     async def post(self, record):
         async with aiohttp.ClientSession() as session:
-            channel = LOG_TELEGRAM_CHANNELS.get(record.levelname, LOG_TELEGRAM_CHANNELS_DEFAULT)
+            channel = config.LOG_TELEGRAM_CHANNELS.get(record.levelname, config.LOG_TELEGRAM_CHANNELS_DEFAULT)
             await session.post(
-                f"https://api.telegram.org/bot{LOG_TELEGRAM_TOKEN}/sendMessage",
+                f"https://api.telegram.org/bot{config.LOG_TELEGRAM_TOKEN}/sendMessage",
                 data={
                     'chat_id': channel,
                     'parse_mode': 'Markdown',
-                    'text': f"`{LOG_TELEGRAM_APP_NAME}` `{record.levelname[:3]}` " + self.format(record)
+                    'text': f"`{config.LOG_TELEGRAM_APP_NAME}` `{record.levelname[:3]}` " + self.format(record)
                 },
             )
 
