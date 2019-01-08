@@ -1,10 +1,7 @@
 import asyncio
-import logging
-import sys
 from collections import deque
 from datetime import datetime
 from decimal import Decimal
-from sys import stdout
 
 import pytz
 from dateutil.parser import parse
@@ -15,12 +12,13 @@ from apps.mileapi.api import get_current_block, get_block, get_wallet
 from apps.mileapi.constants import TX_TYPES, TransferAssetsTransaction, RegisterNodeTransactionWithAmount
 from core.collections import unique_deque
 from core.common import utcnow
-from core.config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, INDEXER_DB_POOL_MIN_SIZE, INDEXER_DB_POOL_MAX_SIZE, INDEXER_TASKS_LIMIT, \
+from core.config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, INDEXER_DB_POOL_MIN_SIZE, INDEXER_DB_POOL_MAX_SIZE, \
+    INDEXER_TASKS_LIMIT, \
     GENESIS_BLOCK
 from core.di import db
 from core.logging import setup_logging
 
-logger = setup_logging(__name__)
+logger = setup_logging('indexer')
 
 last_processed_block_id = 0
 
@@ -30,7 +28,7 @@ TASKS_NAMES = {TASK_BLOCK: 'block', TASK_WALLET: 'wallet'}
 
 
 def start():
-    logger.info('started')
+    logger.error('started')
 
     global last_processed_block_id
     loop = asyncio.get_event_loop()

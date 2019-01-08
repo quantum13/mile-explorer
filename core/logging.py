@@ -1,6 +1,13 @@
+import asyncio
+import atexit
+
+import aiohttp
 import logging
 import sys
 import time
+
+from core import di
+from core.config import LOG_TELEGRAM_APP_NAME, LOG_TELEGRAM_CHANNELS, LOG_TELEGRAM_CHANNELS_DEFAULT, LOG_TELEGRAM_TOKEN
 
 
 class FormatterWithTime(logging.Formatter):
@@ -11,12 +18,44 @@ class FormatterWithTime(logging.Formatter):
         return s
 
 
-def setup_logging(logger_name):
+class TelegramHandler(logging.Handler):
+    def __init__(self):
+        super().__init__()
+        self.setFormatter(logging.Formatter(f"[%(name)s] %(message)s"))
+
+    def emit(self, record):
+        if asyncio.get_event_loop().is_closed():
+            return
+        try:
+            asyncio.ensure_future(self.post(record))
+        except Exception:
+            self.handleError(record)
+
+    async def post(self, record):
+        async with aiohttp.ClientSession() as session:
+            channel = LOG_TELEGRAM_CHANNELS.get(record.levelname, LOG_TELEGRAM_CHANNELS_DEFAULT)
+            await session.post(
+                f"https://api.telegram.org/bot{LOG_TELEGRAM_TOKEN}/sendMessage",
+                data={
+                    'chat_id': channel,
+                    'parse_mode': 'Markdown',
+                    'text': f"`{LOG_TELEGRAM_APP_NAME}` `{record.levelname[:3]}` " + self.format(record)
+                },
+            )
+
+
+def setup_logging(logger_name, replace=False):
     logger = logging.getLogger(logger_name)
     logger.setLevel('INFO')
+
+    if replace:
+        for h in logger.handlers:
+            logger.removeHandler(h)
 
     stdout_handler = logging.StreamHandler(stream=sys.stdout)
     stdout_handler.setFormatter(FormatterWithTime('%(asctime)s [%(levelname)s] %(name)s %(message)s'))
     logger.addHandler(stdout_handler)
+
+    logger.addHandler(TelegramHandler())
 
     return logger

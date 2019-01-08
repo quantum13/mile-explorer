@@ -80,10 +80,11 @@ class Transaction(db.Model):
     node_address = sa.Column(sa.String(255), default=None)
     rate = sa.Column(sa.DECIMAL(19, 5), default=None)
 
-    _idx1 = db.Index('transactions__block_id__num_in_block', 'block_id', 'num_in_block')
+    _idx1 = db.Index('transactions__block_id__num_in_block__is_fee', 'block_id', 'num_in_block', 'is_fee')
     _idx2 = db.Index('transactions__from__timestamp', 'wallet_from', 'timestamp')
     _idx3 = db.Index('transactions__to__timestamp', 'wallet_to', 'timestamp')
     _idx4 = db.Index('transactions__timestamp', 'timestamp')
+    _idx5 = db.Index('transactions__is_fee', 'is_fee')
 
     def __str__(self):
         return self.pub_key

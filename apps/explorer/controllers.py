@@ -19,7 +19,7 @@ async def main(request):
 @jinja.template('explorer/transactions.html')
 async def main(request: Request):
 
-    query = Transaction.query.limit(PAGE_SIZE)
+    query = Transaction.query.where(Transaction.is_fee==False).limit(PAGE_SIZE)
 
     need_reverse = False
     pagination_has_prev = True

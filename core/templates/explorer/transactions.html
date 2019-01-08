@@ -39,7 +39,7 @@
         <tr>
             <td><a href="/transactions/{{ tx.digest }}" title="{{ tx.digest }}">{{ tx.digest|truncate(10) }}</a></td>
             <td><a href="/blocks/{{ tx.block_id }}">{{ tx.block_id }}</a></td>
-            <td>{{ tx.timestamp.strftime('%H:%I:%S %d.%m.%Y') }}</td>
+            <td>{{ tx.timestamp.strftime('%H:%M:%S %d.%m.%Y') }}</td>
             <td>{{ tx.human_type() }}</td>
             <td>
                 {% if tx.wallet_from %}
