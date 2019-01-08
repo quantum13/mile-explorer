@@ -17,9 +17,9 @@ app.config.DB_PASSWORD = DB_PASSWORD
 app.config.DB_POOL_MIN_SIZE = SERVER_DB_POOL_MIN_SIZE
 app.config.DB_POOL_MAX_SIZE = SERVER_DB_POOL_MAX_SIZE
 
+Compress(app)  # must be before all response middleware
 db = Gino(app)
 
-Compress(app)
 jinja = SanicJinja2(app, pkg_name='core')
 
 
