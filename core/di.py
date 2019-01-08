@@ -19,7 +19,7 @@ app.config.DB_POOL_MAX_SIZE = SERVER_DB_POOL_MAX_SIZE
 
 db = Gino(app)
 
-# Compress(app)
+Compress(app)
 jinja = SanicJinja2(app, pkg_name='core')
 
 

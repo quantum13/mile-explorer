@@ -56,7 +56,11 @@
                 {% endif %}
             </td>
             <td>{{ tx_value(tx) }}</td>
-            <td><div title="tx.description">{{ tx.description|truncate(75) }}</div></td>
+            <td>
+                <div {% if tx.decription|length>72 %}title="{{ tx.description }}"{% endif %} style="word-break: break-all;">
+                    {{ tx.description|truncate(75) }}
+                </div>
+            </td>
         </tr>
         {% endfor %}
         </tbody>
