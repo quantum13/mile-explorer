@@ -2,7 +2,7 @@ from core.common import require_env
 
 DEBUG = require_env('ENVIRONMENT') == 'dev'
 
-SERVER_PORT = 8080
+SERVER_PORT = require_env('SERVER_PORT')
 SERVER_WORKERS_COUNT = 1
 
 DB_USER = require_env('DB_USER')
