@@ -5,6 +5,9 @@ DEBUG = require_env('ENVIRONMENT') == 'dev'
 SERVER_PORT = require_env('SERVER_PORT')
 SERVER_WORKERS_COUNT = 1
 
+SSL_CERT = require_env('SSL_CERT')
+SSL_KEY = require_env('SSL_KEY')
+
 DB_USER = require_env('DB_USER')
 DB_PASSWORD = require_env('DB_PASSWORD')
 DB_HOST = require_env('DB_HOST')
@@ -16,7 +19,7 @@ SERVER_DB_POOL_MAX_SIZE = 45
 INDEXER_DB_POOL_MIN_SIZE = 30
 INDEXER_DB_POOL_MAX_SIZE = 45
 INDEXER_TASKS_LIMIT = 40
-# todo posgres limit ->200
+# todo postgres limit ->200
 
 if require_env('NETWORK') == 'testnet':
     WEB_WALLET_URL = 'https://wallet.testnet.mile.global'

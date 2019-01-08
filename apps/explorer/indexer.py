@@ -50,9 +50,11 @@ def start():
     fetch_tasks = unique_deque()
 
     last_processed_block_id = loop.run_until_complete(process_missing_blocks(fetch_tasks))
+
     asyncio.ensure_future(check_new_blocks(fetch_tasks))
-    asyncio.ensure_future(handle_fetch_tasks(fetch_tasks))
-    asyncio.ensure_future(check_missing_wallets(fetch_tasks))
+    asyncio.ensure_future(handle_fetch_tasks(fetch_tasks))  # INDEXER_TASKS_LIMIT connects
+    asyncio.ensure_future(check_missing_wallets(fetch_tasks))  # 1 connect
+
     loop.run_forever()
 
 
@@ -246,7 +248,6 @@ async def _process_wallet(pub_key):
 
     await wallet.update(**wallet.to_dict()).apply()
     return True
-
 
 
 async def _process_block(block_id, fetch_tasks: deque):
