@@ -1,0 +1,67 @@
+
+{% macro tx_value(tx) %}
+    {{ ('{:,}'.format(tx.mile) if tx.mile else ('{:,}'.format(tx.xdr) if tx.xdr else '')).replace(',', '&nbsp;').rstrip('0').rstrip('.') }}
+    {% if tx.mile %}miles{% endif %}
+    {% if tx.xdr %}XDR{% endif %}
+{% endmacro %}
+
+{% macro page_before(paginator) %}
+    {% if paginator.before %}
+        <a class="btn btn-dark btn-sm" href="{{ paginator.before }}">&larr;</a>
+    {% else %}
+        <a class="btn btn-dark btn-sm disabled" href="#" >&larr;</a>
+    {% endif %}
+{% endmacro %}
+{% macro page_after(paginator) %}
+    {% if paginator.after %}
+        <a class="btn btn-dark btn-sm" href="{{ paginator.after }}">&rarr;</a>
+    {% endif %}
+{% endmacro %}
+
+{% macro txs_table(transactions) %}
+    <table class="table table-striped table-hover table-sm table-responsive-md">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col">tx hash</th>
+            <th scope="col">block</th>
+            <th scope="col">date</th>
+            <th scope="col">type</th>
+            <th scope="col">from</th>
+            <th scope="col">to</th>
+            <th scope="col">amount</th>
+            <th scope="col">description</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for tx in transactions %}
+        <tr>
+            <td><a href="/transactions/{{ tx.digest }}" title="{{ tx.digest }}">{{ tx.digest|truncate(10) }}</a></td>
+            <td><a href="/blocks/{{ tx.block_id }}">{{ tx.block_id }}</a></td>
+            <td>{{ tx.timestamp.strftime('%H:%M:%S %d.%m.%Y') }}</td>
+            <td>{{ tx.human_type() }}</td>
+            <td>
+                {% if tx.wallet_from %}
+                    <a href="/addresses/{{ tx.wallet_from }}">{{ tx.wallet_from|truncate(15) }}</a>
+                {% else %}
+                    &nbsp;
+                {% endif %}
+            </td>
+            <td>
+                {% if tx.wallet_to %}
+                    <a href="/addresses/{{ tx.wallet_to }}">{{ tx.wallet_to|truncate(15) }}</a>
+                {% else %}
+                    &nbsp;
+                {% endif %}
+            </td>
+            <td>{{ tx_value(tx) }}</td>
+            <td>
+                <div {% if tx.description|length>72 %}title="{{ tx.description }}"{% endif %} style="word-break: break-all;">
+                    {{ tx.description|truncate(75) }}
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endmacro %}
+

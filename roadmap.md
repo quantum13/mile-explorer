@@ -34,3 +34,14 @@
   - description
 * wallet alias
 * wallet comments
+----
+* Infra
+  - docker compose
+  - service
+----
+* Logging
+  - response from api
+  - stacktrace on exceptions (failed to get block by id: Block ID absent in database)
+* Indexer
+  - process dirty wallets 1 time/1min
+  - fee & bp emission tx separated

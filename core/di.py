@@ -1,7 +1,10 @@
 import asyncio
+from urllib.parse import urlunparse
 
 from gino.ext.sanic import Gino
 from sanic import Sanic
+from sanic.request import Request
+from sanic.response import redirect
 from sanic_compress import Compress
 from sanic_jinja2 import SanicJinja2
 
@@ -36,3 +39,14 @@ async def setup_db(app, loop):
 @app.listener('before_server_stop')
 async def setup_db(app, loop):
     await asyncio.sleep(5)
+
+@app.middleware('request')
+async def halt_request(request: Request):
+    if len(request.path) > 1:
+        if request.path[-1] == '/':
+            return redirect(
+                urlunparse(
+                    ('', '', request.path[:-1], None, request.query_string, None)
+                ),
+                status=301
+            )

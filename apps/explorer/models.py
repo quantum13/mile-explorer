@@ -87,7 +87,7 @@ class Transaction(db.Model):
     _idx5 = db.Index('transactions__is_fee', 'is_fee')
 
     def __str__(self):
-        return self.pub_key
+        return self.digest
 
     def human_type(self):
         return TX_TYPES_HUMAN.get(self.type, '')

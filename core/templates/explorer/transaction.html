@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block meta_title %}Mile transaction {{ tx.digest }}{% endblock %}
+
+{% block content %}
+
+    <h1>Mile transaction {{ tx.digest }}</h1>
+
+    <table class="table table-hover table-sm">
+        <tbody>
+            <tr class="d-flex">
+                <td class="col-md-3">Block</td>
+                <td class="col-md-9"><a href="/blocks/{{ tx.block_id }}">{{ tx.block_id }}</a></td>
+            </tr>
+
+            <tr class="d-flex">
+                <td class="col-md-3">Num in block</td>
+                <td class="col-md-9">{{ tx.num_in_block }}</td>
+            </tr>
+
+            <tr class="d-flex">
+                <td class="col-md-3">Date</td>
+                <td class="col-md-9">{{ tx.timestamp.strftime('%H:%M:%S %d.%m.%Y') }}</td>
+            </tr>
+
+            <tr class="d-flex">
+                <td class="col-md-3">Type</td>
+                <td class="col-md-9">{{ tx.human_type().capitalize() }}</td>
+            </tr>
+
+            {% if tx.fee %}
+            <tr class="d-flex">
+                <td class="col-md-3">Fee</td>
+                <td class="col-md-9">{{ tx.fee }}</td>
+            </tr>
+            {% endif %}
+
+            {% if tx.description %}
+            <tr class="d-flex">
+                <td class="col-md-3">Description</td>
+                <td class="col-md-9">{{ tx.description }}</td>
+            </tr>
+            {% endif %}
+
+            {% if tx.wallet_from %}
+            <tr class="d-flex">
+                <td class="col-md-3">From</td>
+                <td class="col-md-9"><a href="/addresses/{{ tx.wallet_from }}">{{ tx.wallet_from }}</a></td>
+            </tr>
+            {% endif %}
+
+            {% if tx.wallet_to %}
+            <tr class="d-flex">
+                <td class="col-md-3">To</td>
+                <td class="col-md-9"><a href="/addresses/{{ tx.wallet_to }}">{{ tx.wallet_to }}</a></td>
+            </tr>
+            {% endif %}
+
+            {% if tx.mile or tx.xdr %}
+                {% from 'explorer/macros.html' import tx_value %}
+                <tr class="d-flex">
+                    <td class="col-md-3">Value</td>
+                    <td class="col-md-9">{{ tx_value(tx) }}</td>
+                </tr>
+            {% endif %}
+
+            {% if tx.node_address %}
+            <tr class="d-flex">
+                <td class="col-md-3">Address</td>
+                <td class="col-md-9">{{ tx.node_address }}</td>
+            </tr>
+            {% endif %}
+
+            {% if tx.rate %}
+            <tr class="d-flex">
+                <td class="col-md-3">Rate</td>
+                <td class="col-md-9">{{ tx.rate }}</td>
+            </tr>
+            {% endif %}
+
+            {% if tx.asset %}
+            <tr class="d-flex">
+                <td class="col-md-3">Asset</td>
+                <td class="col-md-9">{{ 'miles' if tx.asset==1 else 'XDR' }}</td>
+            </tr>
+            {% endif %}
+
+
+            <tr class="d-flex">
+                <td class="col-md-3">Signature</td>
+                <td class="col-md-9">{{ tx.signature }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+
+
+{% endblock %}

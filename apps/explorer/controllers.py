@@ -1,10 +1,29 @@
 import re
 
+from sanic.exceptions import NotFound
+from sanic.log import logger
 from sanic.request import Request
 
-from apps.explorer.models import Transaction
+from apps.explorer.models import Transaction, Block
 from core.config import PAGE_SIZE
 from core.di import app, jinja
+from core.pagination import get_paginator
+
+
+@app.exception(NotFound)
+@jinja.template('error404.html')
+async def error_page(request, exception):
+    return {}
+
+
+@app.exception(Exception)
+@jinja.template('error.html')
+async def error_page(request, exception):
+    logger.error(str(exception))
+    return {}
+
+
+
 
 
 @app.route("/")
@@ -17,46 +36,37 @@ async def main(request):
 
 @app.route("/transactions")
 @jinja.template('explorer/transactions.html')
-async def main(request: Request):
+async def transactions(request: Request):
 
-    query = Transaction.query.where(Transaction.is_fee==False).limit(PAGE_SIZE)
+    query = Transaction.query.where(Transaction.is_fee==False)
 
-    need_reverse = False
-    pagination_has_prev = True
+    paginator = await get_paginator(request, query, [
+        (Transaction.block_id, 'desc', int, '\d+'),
+        (Transaction.num_in_block, 'desc', int, '-?\d+'),
+    ])
 
-    if 'after' in request.raw_args and re.match('^\d+_-?\d+$', request.raw_args['after']):
-        block_id, num_in_block = request.raw_args['after'].split('_')
-        query = query.where(
-            (Transaction.block_id<int(block_id)) |
-            ((Transaction.block_id==int(block_id)) & (Transaction.num_in_block<int(num_in_block)))
-        )
-
-        query = query.order_by(
-            Transaction.block_id.desc(), Transaction.num_in_block.desc()
-        )
-    elif 'before' in request.raw_args and re.match('^\d+_-?\d+$', request.raw_args['before']):
-        block_id, num_in_block = request.raw_args['before'].split('_')
-        query = query.where(
-            (Transaction.block_id>int(block_id)) |
-            ((Transaction.block_id==int(block_id)) & (Transaction.num_in_block>int(num_in_block)))
-        )
-
-        query = query.order_by(
-            Transaction.block_id.asc(), Transaction.num_in_block.asc()
-        )
-        need_reverse = True
-    else:
-        query = query.order_by(
-            Transaction.block_id.desc(), Transaction.num_in_block.desc()
-        )
-        pagination_has_prev = False
-
-    txs = await query.gino.all()
-    if need_reverse:
-        txs = reversed(txs)
+    return {'paginator': paginator}
 
 
-    return {
-        'transactions': list(txs),
-        'pagination_has_prev': pagination_has_prev
-    }
+@app.route("/transactions/<tx_digest>")
+@jinja.template('explorer/transaction.html')
+async def transaction(request: Request, tx_digest):
+
+    tx = await Transaction.get(tx_digest)
+    if not tx:
+        raise NotFound('Transaction not found')
+
+    return {'tx': tx}
+
+
+@app.route("/blocks")
+@jinja.template('explorer/blocks.html')
+async def transactions(request: Request):
+
+    query = Block.query
+
+    paginator = await get_paginator(request, query, [
+        (Block.id, 'desc', int, '\d+')
+    ])
+
+    return {'paginator': paginator}
