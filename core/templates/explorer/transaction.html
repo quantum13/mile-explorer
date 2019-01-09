@@ -38,21 +38,21 @@
             {% if tx.description %}
             <tr class="d-flex">
                 <td class="col-md-3">Description</td>
-                <td class="col-md-9">{{ tx.description }}</td>
+                <td class="col-md-9" style="word-break: break-all;">{{ tx.description }}</td>
             </tr>
             {% endif %}
 
             {% if tx.wallet_from %}
             <tr class="d-flex">
                 <td class="col-md-3">From</td>
-                <td class="col-md-9"><a href="/addresses/{{ tx.wallet_from }}">{{ tx.wallet_from }}</a></td>
+                <td class="col-md-9" style="word-break: break-all;"><a href="/addresses/{{ tx.wallet_from }}">{{ tx.wallet_from }}</a></td>
             </tr>
             {% endif %}
 
             {% if tx.wallet_to %}
             <tr class="d-flex">
                 <td class="col-md-3">To</td>
-                <td class="col-md-9"><a href="/addresses/{{ tx.wallet_to }}">{{ tx.wallet_to }}</a></td>
+                <td class="col-md-9" style="word-break: break-all;"><a href="/addresses/{{ tx.wallet_to }}">{{ tx.wallet_to }}</a></td>
             </tr>
             {% endif %}
 
@@ -67,7 +67,7 @@
             {% if tx.node_address %}
             <tr class="d-flex">
                 <td class="col-md-3">Address</td>
-                <td class="col-md-9">{{ tx.node_address }}</td>
+                <td class="col-md-9" style="word-break: break-all;">{{ tx.node_address }}</td>
             </tr>
             {% endif %}
 
