@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% from 'explorer/macros.html' import txs_table %}
+
+{% block meta_title %}Mile block #{{ b.id }}{% endblock %}
+
+{% block content %}
+
+    <h1 style="word-break: break-all;">Mile block #{{ b.id }}</h1>
+
+
+    <div class="row" style="margin-bottom: 10px">
+        <div class="col-md-2">
+            {% if has_next_block %}
+                <a class="btn btn-dark btn-sm" href="/blocks/{{ b.id+1 }}">&larr;</a>
+            {% else %}
+                <a class="btn btn-dark btn-sm disabled" href="#">&larr;</a>
+            {% endif %}
+            {% if b.id>0 %}
+                <a class="btn btn-dark btn-sm" href="/blocks/{{ b.id-1 }}">&rarr;</a>
+            {% else %}
+                <a class="btn btn-dark btn-sm disabled" href="#">&rarr;</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <table class="table table-hover table-sm">
+        <tbody>
+            <tr class="d-flex">
+                <td class="col-md-3">Block</td>
+                <td class="col-md-9">{{ b.id }}</td>
+            </tr>
+
+            <tr class="d-flex">
+                <td class="col-md-3">Date</td>
+                <td class="col-md-9">{{ b.timestamp.strftime('%H:%M:%S %d.%m.%Y') }}</td>
+            </tr>
+
+            <tr class="d-flex">
+                <td class="col-md-3">Tx count</td>
+                <td class="col-md-9">{{ b.transactions_count }}</td>
+            </tr>
+
+            <tr class="d-flex">
+                <td class="col-md-3">Block producer</td>
+                <td class="col-md-9" style="word-break: break-all;"><a href="/addresses/{{ b.main_signer }}">{{ b.main_signer }}</a></td>
+            </tr>
+
+            <tr class="d-flex">
+                <td class="col-md-3">Signers count</td>
+                <td class="col-md-9">{{ b.number_of_signers }}</td>
+            </tr>
+
+            <tr class="d-flex">
+                <td class="col-md-3">Block digest</td>
+                <td class="col-md-9" style="word-break: break-all;">{{ b.block_header_digest }}</td>
+            </tr>
+
+            <tr class="d-flex">
+                <td class="col-md-3">Merkle root</td>
+                <td class="col-md-9" style="word-break: break-all;">{{ b.merkle_root }}</td>
+            </tr>
+
+            <tr class="d-flex">
+                <td class="col-md-3">Round</td>
+                <td class="col-md-9">{{ b.round }}</td>
+            </tr>
+
+
+        </tbody>
+    </table>
+    {% if txs_more %}
+        <h2>Last transactions</h2>
+    {% else %}
+        <h2>Transactions</h2>
+    {% endif %}
+
+    {{ txs_table(txs) }}
+
+    {% if txs_more %}
+        <a class="btn btn-dark float-right" href="/transactions/?block_id={{ b.id }}">All transactions &rarr;</a>
+    {% endif %}
+
+{% endblock %}

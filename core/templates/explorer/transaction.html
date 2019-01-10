@@ -25,7 +25,7 @@
 
             <tr class="d-flex">
                 <td class="col-md-3">Type</td>
-                <td class="col-md-9">{{ tx.human_type().capitalize() }}</td>
+                <td class="col-md-9">{{ tx.human_type().capitalize() }} {% if tx.is_fee %}<span title="Fee transaction">*</span>{% endif %}</td>
             </tr>
 
             {% if tx.fee %}
@@ -38,7 +38,7 @@
             {% if tx.description %}
             <tr class="d-flex">
                 <td class="col-md-3">Description</td>
-                <td class="col-md-9" style="word-break: break-all;">{{ tx.description }}</td>
+                <td class="col-md-9" style="word-break: break-all;">{{ tx.description|replace("\n", "<br/>") }}</td>
             </tr>
             {% endif %}
 

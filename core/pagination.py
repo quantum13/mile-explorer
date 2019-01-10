@@ -1,10 +1,10 @@
 import re
-from urllib.parse import urlparse, parse_qs, urlencode
 
 from sanic.request import Request
 from sqlalchemy.sql import Select
 
 from core.config import PAGE_SIZE
+from core.utils import url_without_qs_param
 
 
 class Paginator:
@@ -23,57 +23,56 @@ async def get_paginator(request: Request, query: Select, columns):
     if 'after' in request.raw_args and re.match(f"^{pattern}$", request.raw_args['after']):
         cols_vals = request.raw_args['after'].split('_')
         col, order, type, _ = columns[0]
-        order_by = []
-        if order=='desc':
-            condition = col <= type(cols_vals[0])
-            order_by.append(col.desc())
-        else:
-            condition = col >= type(cols_vals[0])
-            order_by.append(col.asc())
+        order_by = [getattr(col, order)()]
 
-        if len(columns) > 1:
+        if len(columns) == 1:
+            if order=='desc':
+                condition = col <= type(cols_vals[0])
+            else:
+                condition = col >= type(cols_vals[0])
+
+        else:
             col2, order2, type2, _ = columns[1]
+            order_by.append(getattr(col2, order)())
 
             if order2 == 'desc':
-                condition |= (col == type(cols_vals[0])) & (col2 <= type(cols_vals[1]))
-                order_by.append(col2.desc())
+                condition = (col < type(cols_vals[0])) \
+                            | (col == type(cols_vals[0])) & (col2 <= type(cols_vals[1]))
             else:
-                condition |= (col == type(cols_vals[0])) & (col2 >= type(cols_vals[1]))
-                order_by.append(col2.asc())
+                condition = (col > type(cols_vals[0])) \
+                            | (col == type(cols_vals[0])) & (col2 >= type(cols_vals[1]))
 
         query = query.where(condition).order_by(*order_by)
 
         limit = PAGE_SIZE+2
         slice_from = 1
 
-
     elif 'before' in request.raw_args and re.match(f"^{pattern}$", request.raw_args['before']):
         cols_vals = request.raw_args['before'].split('_')
         col, order, type, _ = columns[0]
-        order_by = []
-        if order == 'desc':
-            condition = col >= type(cols_vals[0])
-            order_by.append(col.asc())
-        else:
-            condition = col <= type(cols_vals[0])
-            order_by.append(col.desc())
+        order_by = [col.asc() if order == 'desc' else col.desc()]
 
-        if len(columns) > 1:
+        if len(columns) == 1:
+            if order == 'desc':
+                condition = col >= type(cols_vals[0])
+            else:
+                condition = col <= type(cols_vals[0])
+        else:
             col2, order2, type2, _ = columns[1]
+            order_by.append(col2.asc() if order2 == 'desc' else col2.desc())
 
             if order2 == 'desc':
-                condition |= (col == type(cols_vals[0])) & (col2 >= type(cols_vals[1]))
-                order_by.append(col2.asc())
+                condition = (col > type(cols_vals[0])) \
+                            | (col == type(cols_vals[0])) & (col2 >= type(cols_vals[1]))
             else:
-                condition |= (col == type(cols_vals[0])) & (col2 <= type(cols_vals[1]))
-                order_by.append(col2.desc())
+                condition = (col < type(cols_vals[0])) \
+                            | (col == type(cols_vals[0])) & (col2 <= type(cols_vals[1]))
 
         query = query.where(condition).order_by(*order_by)
 
         limit = PAGE_SIZE+2
         slice_from = 1
         need_reverse = True
-
 
     else:
         col, order, _, _ = columns[0]
@@ -105,20 +104,13 @@ async def get_paginator(request: Request, query: Select, columns):
         if len(all_items) == limit:
             after = True
 
-    url = urlparse(request.url)
-    query = parse_qs(url.query)
-
     if after:
         after = '_'.join([str(getattr(items[-1], col[0].name)) for col in columns])
-        query.pop('before', None)
-        query['after'] = after
-        after = f"{url.path}?{urlencode(query, True)}"
+        after = url_without_qs_param(request.url, 'before', {'after': after})
 
     if before:
         before = '_'.join([str(getattr(items[0], col[0].name)) for col in columns])
-        query.pop('after', None)
-        query['before'] = before
-        before = f"{url.path}?{urlencode(query, True)}"
+        before = url_without_qs_param(request.url, 'after', {'before': before})
 
     return Paginator(
         items=items,
