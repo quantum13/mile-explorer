@@ -1,10 +1,12 @@
 import re
+from datetime import datetime
 
+import pytz
 from sanic.exceptions import NotFound
 from sanic.log import logger
 from sanic.request import Request
 
-from apps.explorer.models import Transaction, Block
+from apps.explorer.models import Transaction, Block, Wallet
 from core.di import app, jinja
 from core.pagination import get_paginator
 from core.utils import url_without_qs_param
@@ -50,8 +52,8 @@ async def transactions(request: Request):
         block_id = without_block_url = None
 
     paginator = await get_paginator(request, query, [
-        (Transaction.block_id, 'desc', int, '\d+'),
-        (Transaction.num_in_block, 'desc', int, '-?\d+'),
+        (Transaction.block_id, 'desc', str, int, '\d+'),
+        (Transaction.num_in_block, 'desc', str, int, '-?\d+'),
     ])
 
     return {
@@ -62,7 +64,7 @@ async def transactions(request: Request):
     }
 
 
-@app.route("/transactions/<tx_digest:[A-z0-9]+>")
+@app.route("/transactions/<tx_digest:[A-Za-z0-9]+>")
 @jinja.template('explorer/transaction.html')
 async def transaction(request: Request, tx_digest):
 
@@ -98,7 +100,21 @@ async def transactions(request: Request):
     query = Block.query
 
     paginator = await get_paginator(request, query, [
-        (Block.id, 'desc', int, '\d+')
+        (Block.id, 'desc', str, int, '\d+')
+    ])
+
+    return {'paginator': paginator}
+
+
+@app.route("/addresses")
+@jinja.template('explorer/addresses.html')
+async def transactions(request: Request):
+
+    query = Wallet.query
+
+    paginator = await get_paginator(request, query, [
+        (Wallet.created_at, 'desc', lambda x: str(int(x.timestamp())), lambda x: datetime.utcfromtimestamp(int(x)).replace(tzinfo=pytz.utc), '\d+'),
+        (Wallet.pub_key, 'desc', str, str,'[A-Za-z0-9]+')
     ])
 
     return {'paginator': paginator}

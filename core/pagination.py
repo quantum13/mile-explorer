@@ -14,33 +14,34 @@ class Paginator:
 
 
 async def get_paginator(request: Request, query: Select, columns):
+    """columns: column, sort order, from col to url, from url to col, url pattern"""
     assert len(columns) > 0
 
     need_reverse = False
 
-    pattern = '_'.join([column[3] for column in columns])
+    pattern = '_'.join([column[4] for column in columns])
 
     if 'after' in request.raw_args and re.match(f"^{pattern}$", request.raw_args['after']):
         cols_vals = request.raw_args['after'].split('_')
-        col, order, type, _ = columns[0]
+        col, order, to_url, from_url, _ = columns[0]
         order_by = [getattr(col, order)()]
 
         if len(columns) == 1:
-            if order=='desc':
-                condition = col <= type(cols_vals[0])
+            if order == 'desc':
+                condition = col <= from_url(cols_vals[0])
             else:
-                condition = col >= type(cols_vals[0])
+                condition = col >= from_url(cols_vals[0])
 
         else:
-            col2, order2, type2, _ = columns[1]
-            order_by.append(getattr(col2, order)())
+            col2, order2, to_url2, from_url2, _ = columns[1]
+            order_by.append(getattr(col2, order2)())
 
             if order2 == 'desc':
-                condition = (col < type(cols_vals[0])) \
-                            | (col == type(cols_vals[0])) & (col2 <= type(cols_vals[1]))
+                condition = (col < from_url(cols_vals[0])) \
+                            | (col == from_url(cols_vals[0])) & (col2 <= from_url2(cols_vals[1]))
             else:
-                condition = (col > type(cols_vals[0])) \
-                            | (col == type(cols_vals[0])) & (col2 >= type(cols_vals[1]))
+                condition = (col > from_url(cols_vals[0])) \
+                            | (col == from_url(cols_vals[0])) & (col2 >= from_url2(cols_vals[1]))
 
         query = query.where(condition).order_by(*order_by)
 
@@ -49,24 +50,24 @@ async def get_paginator(request: Request, query: Select, columns):
 
     elif 'before' in request.raw_args and re.match(f"^{pattern}$", request.raw_args['before']):
         cols_vals = request.raw_args['before'].split('_')
-        col, order, type, _ = columns[0]
+        col, order, to_url, from_url, _ = columns[0]
         order_by = [col.asc() if order == 'desc' else col.desc()]
 
         if len(columns) == 1:
             if order == 'desc':
-                condition = col >= type(cols_vals[0])
+                condition = col >= from_url(cols_vals[0])
             else:
-                condition = col <= type(cols_vals[0])
+                condition = col <= from_url(cols_vals[0])
         else:
-            col2, order2, type2, _ = columns[1]
+            col2, order2, to_url2, from_url2, _ = columns[1]
             order_by.append(col2.asc() if order2 == 'desc' else col2.desc())
 
             if order2 == 'desc':
-                condition = (col > type(cols_vals[0])) \
-                            | (col == type(cols_vals[0])) & (col2 >= type(cols_vals[1]))
+                condition = (col > from_url(cols_vals[0])) \
+                            | (col == from_url(cols_vals[0])) & (col2 >= from_url2(cols_vals[1]))
             else:
-                condition = (col < type(cols_vals[0])) \
-                            | (col == type(cols_vals[0])) & (col2 <= type(cols_vals[1]))
+                condition = (col < from_url(cols_vals[0])) \
+                            | (col == from_url(cols_vals[0])) & (col2 <= from_url2(cols_vals[1]))
 
         query = query.where(condition).order_by(*order_by)
 
@@ -75,10 +76,10 @@ async def get_paginator(request: Request, query: Select, columns):
         need_reverse = True
 
     else:
-        col, order, _, _ = columns[0]
+        col, order, _, _, _ = columns[0]
         order_by = [ getattr(col, order)() ]
         if len(columns) > 1:
-            col2, order2, _, _ = columns[1]
+            col2, order2, _, _, _ = columns[1]
             order_by.append(getattr(col2, order2)())
 
         query = query.order_by(*order_by)
@@ -86,6 +87,7 @@ async def get_paginator(request: Request, query: Select, columns):
         slice_from = 0
 
     query = query.limit(limit)
+    print(query)
 
     all_items = await query.gino.all()
     items = all_items[slice_from:PAGE_SIZE+slice_from]
@@ -105,11 +107,11 @@ async def get_paginator(request: Request, query: Select, columns):
             after = True
 
     if after:
-        after = '_'.join([str(getattr(items[-1], col[0].name)) for col in columns])
+        after = '_'.join([col[2](getattr(items[-1], col[0].name)) for col in columns])
         after = url_without_qs_param(request.url, 'before', {'after': after})
 
     if before:
-        before = '_'.join([str(getattr(items[0], col[0].name)) for col in columns])
+        before = '_'.join([col[2](getattr(items[0], col[0].name)) for col in columns])
         before = url_without_qs_param(request.url, 'after', {'before': before})
 
     return Paginator(

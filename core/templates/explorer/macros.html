@@ -5,6 +5,10 @@
     {% if tx.xdr %}XDR{% endif %}
 {% endmacro %}
 
+{% macro pretty_val(val) %}
+    {{ '{:,}'.format(val).replace(',', '&nbsp;').rstrip('0').rstrip('.') }}
+{% endmacro %}
+
 {% macro page_before(paginator) %}
     {% if paginator.before %}
         <a class="btn btn-dark btn-sm" href="{{ paginator.before }}">&larr;</a>

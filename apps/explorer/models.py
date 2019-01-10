@@ -28,7 +28,6 @@ class Wallet(db.Model):
     _idx5 = db.Index('transactions__created_at', 'created_at')
     _idx6 = db.Index('transactions__update_needed', 'update_needed')
 
-
     def __str__(self):
         return self.pub_key
 

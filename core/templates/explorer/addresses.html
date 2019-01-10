@@ -1,13 +1,14 @@
 {% extends "base.html" %}
 {% from 'explorer/macros.html' import page_before %}
 {% from 'explorer/macros.html' import page_after %}
+{% from 'explorer/macros.html' import pretty_val %}
 
-{% block meta_title %}Mile blocks{% endblock %}
+{% block meta_title %}Mile wallets{% endblock %}
 
 
 {% block content %}
 
-    <h1>Mile blocks</h1>
+    <h1>Mile wallets</h1>
 
     <div class="row" style="margin-bottom: 10px">
         <div class="col-md-2">
@@ -19,26 +20,19 @@
         <table class="table table-striped table-hover table-sm table-responsive-md">
         <thead class="thead-dark">
         <tr>
-            <th scope="col">#</th>
-            <th scope="col">date</th>
-            <th scope="col">tx count</th>
-            <th scope="col">producer</th>
+            <th scope="col">address</th>
+            <th scope="col">created</th>
+            <th scope="col">XDR</th>
+            <th scope="col">miles</th>
         </tr>
         </thead>
         <tbody>
-        {% for b in paginator.items %}
+        {% for a in paginator.items %}
         <tr>
-            <td><a href="/blocks/{{ b.id }}">{{ b.id }}</a></td>
-            <td>{{ b.timestamp.strftime('%H:%M:%S %d.%m.%Y') }}</td>
-            <td>{{ b.transactions_count }}</td>
-            <td>
-                {% if b.main_signer %}
-                    <a href="/addresses/{{ b.main_signer }}">{{ b.main_signer|truncate(25) }}</a>
-                {% else %}
-                    &nbsp;&nbsp;
-                {% endif %}
-            </td>
-
+            <td><a href="/addresses/{{ a.pub_key }}">{{ a.pub_key }}</a></td>
+            <td>{{ a.created_at.strftime('%H:%M:%S %d.%m.%Y') }}</td>
+            <td>{{ pretty_val(a.xdr_balance) }}</td>
+            <td>{{ pretty_val(a.mile_balance) }}</td>
         </tr>
         {% endfor %}
         </tbody>
