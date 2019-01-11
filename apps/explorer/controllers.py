@@ -40,7 +40,16 @@ async def main(request):
 @jinja.template('explorer/transactions.html')
 async def transactions(request: Request):
 
-    query = Transaction.query.where(Transaction.is_fee==False)
+    query = Transaction.query
+
+    with_fee = request.raw_args.get('fee')
+    if with_fee:
+        without_fee_url = url_without_qs_param(request.url, 'fee')
+        with_fee_url = None
+    else:
+        query = query.where(Transaction.is_fee==False)
+        with_fee = without_fee_url = None
+        with_fee_url = url_without_qs_param(request.url, replace_params={'fee': 1})
 
     block_id = request.raw_args.get('block_id')
     if block_id and re.match('^\d+$', block_id):
@@ -70,7 +79,10 @@ async def transactions(request: Request):
         'block_id': block_id,
         'without_block_url': without_block_url,
         'addr': addr,
-        'without_addr_url': without_addr_url
+        'without_addr_url': without_addr_url,
+        'with_fee': with_fee,
+        'without_fee_url': without_fee_url,
+        'with_fee_url': with_fee_url
     }
 
 

@@ -57,7 +57,7 @@
     {{ txs_table(txs) }}
 
     {% if txs_more %}
-        <a class="btn btn-dark float-right" href="/transactions/?addr={{ w.pub_key }}">All transactions &rarr;</a>
+        <a class="btn btn-dark float-right" href="/transactions/?addr={{ w.pub_key }}&fee=1">All transactions &rarr;</a>
     {% endif %}
 
 {% endblock %}
