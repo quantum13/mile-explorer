@@ -52,4 +52,4 @@
 * Indexer
   - process dirty wallets 1 time/1min
   - fee & bp emission tx separated
-  ! 2modesm start, work, different pool of pg
+  - ~~2 modes, start, work, different pool of pg~~

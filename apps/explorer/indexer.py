@@ -27,7 +27,10 @@ TASK_WALLET = 1
 TASKS_NAMES = {TASK_BLOCK: 'block', TASK_WALLET: 'wallet'}
 
 
-def start():
+def start(stage=2):
+    """stage1 - cold start first-time db fill, stage2 - after db filled"""
+    assert stage in (1, 2)
+
     logger.error('started')
 
     global last_processed_block_id
@@ -41,8 +44,8 @@ def start():
         db.set_bind(
             dsn,
             echo=False,
-            min_size=INDEXER_DB_POOL_MIN_SIZE,
-            max_size=INDEXER_DB_POOL_MAX_SIZE,
+            min_size=INDEXER_DB_POOL_MIN_SIZE[stage],
+            max_size=INDEXER_DB_POOL_MAX_SIZE[stage],
             loop=loop,
         )
     )
@@ -52,7 +55,7 @@ def start():
     last_processed_block_id = loop.run_until_complete(process_missing_blocks(fetch_tasks))
 
     asyncio.ensure_future(check_new_blocks(fetch_tasks))
-    asyncio.ensure_future(handle_fetch_tasks(fetch_tasks))  # INDEXER_TASKS_LIMIT connects
+    asyncio.ensure_future(handle_fetch_tasks(fetch_tasks, stage))  # INDEXER_TASKS_LIMIT connects
     asyncio.ensure_future(check_missing_wallets(fetch_tasks))  # 1 connect
 
     loop.run_forever()
@@ -104,9 +107,9 @@ def _count_tasks(fetch_tasks: deque):
     return tasks_counts
 
 
-async def handle_fetch_tasks(fetch_tasks: deque):
+async def handle_fetch_tasks(fetch_tasks: deque, stage: int):
     futures = []
-    _fill_futures(futures, fetch_tasks)
+    _fill_futures(futures, fetch_tasks, stage)
 
     while True:
         await asyncio.sleep(0.1)
@@ -117,11 +120,11 @@ async def handle_fetch_tasks(fetch_tasks: deque):
                 if f.exception() or not f.result():
                     logger.warning(f"Error during processing task: {TASKS_NAMES[f.task[0]]}:{f.task[1]}, {f.exception().__class__.__name__}({f.exception()})")
                     fetch_tasks.append(f.task)
-        _fill_futures(futures, fetch_tasks)
+        _fill_futures(futures, fetch_tasks, stage)
 
 
-def _fill_futures(futures: list, fetch_tasks: deque):
-    while len(futures) < INDEXER_TASKS_LIMIT and len(fetch_tasks) > 0:
+def _fill_futures(futures: list, fetch_tasks: deque, stage: int):
+    while len(futures) < INDEXER_TASKS_LIMIT[stage] and len(fetch_tasks) > 0:
         task_type, item_id = fetch_tasks.popleft()
         if task_type==TASK_BLOCK:
             coro = _process_block(item_id, fetch_tasks)
