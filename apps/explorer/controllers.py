@@ -1,5 +1,6 @@
 import re
 from datetime import datetime
+from decimal import Decimal
 
 import pytz
 from sanic.exceptions import NotFound
@@ -10,6 +11,9 @@ from apps.explorer.models import Transaction, Block, Wallet
 from core.di import app, jinja
 from core.pagination import get_paginator
 from core.utils import url_without_qs_param
+
+
+#################################################################################
 
 
 @app.exception(NotFound)
@@ -25,7 +29,7 @@ async def error_page(request, exception):
     return {}
 
 
-
+#################################################################################
 
 
 @app.route("/")
@@ -34,6 +38,9 @@ async def main(request):
     return {
         'main': 'hello'
     }
+
+
+#################################################################################
 
 
 @app.route("/transactions")
@@ -97,6 +104,22 @@ async def transaction(request: Request, tx_digest):
     return {'tx': tx}
 
 
+#################################################################################
+
+
+@app.route("/blocks")
+@jinja.template('explorer/blocks.html')
+async def blocks(request: Request):
+
+    query = Block.query
+
+    paginator = await get_paginator(request, query, [
+        (Block.id, 'desc', str, int, '\d+')
+    ])
+
+    return {'paginator': paginator}
+
+
 @app.route("/blocks/<block_id:int>")
 @jinja.template('explorer/block.html')
 async def block(request: Request, block_id):
@@ -115,17 +138,7 @@ async def block(request: Request, block_id):
     }
 
 
-@app.route("/blocks")
-@jinja.template('explorer/blocks.html')
-async def blocks(request: Request):
-
-    query = Block.query
-
-    paginator = await get_paginator(request, query, [
-        (Block.id, 'desc', str, int, '\d+')
-    ])
-
-    return {'paginator': paginator}
+#################################################################################
 
 
 @app.route("/addresses")
@@ -140,6 +153,34 @@ async def addresses(request: Request):
     ])
 
     return {'paginator': paginator}
+
+
+@app.route("/addresses/top/miles")
+@jinja.template('explorer/addresses.html')
+async def addresses(request: Request):
+
+    query = Wallet.query
+
+    paginator = await get_paginator(request, query, [
+        (Wallet.mile_balance, 'desc', str, lambda x: Decimal(x), '\d+\.\d+|\d+'),
+        (Wallet.pub_key, 'desc', str, str,'[A-Za-z0-9]+')
+    ])
+
+    return {'paginator': paginator, 'type': 'top_miles'}
+
+
+@app.route("/addresses/top/xdr")
+@jinja.template('explorer/addresses.html')
+async def addresses(request: Request):
+
+    query = Wallet.query
+
+    paginator = await get_paginator(request, query, [
+        (Wallet.xdr_balance, 'desc', str, lambda x: Decimal(x), '\d+\.\d+|\d+'),
+        (Wallet.pub_key, 'desc', str, str,'[A-Za-z0-9]+')
+    ])
+
+    return {'paginator': paginator, 'type': 'top_xdr'}
 
 
 @app.route("/addresses/<addr:[A-Za-z0-9_]+>")

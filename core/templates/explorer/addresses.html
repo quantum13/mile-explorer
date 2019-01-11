@@ -3,17 +3,36 @@
 {% from 'explorer/macros.html' import page_after %}
 {% from 'explorer/macros.html' import pretty_val %}
 
-{% block meta_title %}Mile wallets{% endblock %}
+{% if type=='top_miles' %}
+    {% set caption='Top wallets by miles' %}
+{% elif type=='top_xdr' %}
+    {% set caption='Top wallets by XDR' %}
+{% else %}
+    {% set caption='Mile wallets' %}
+{% endif %}
+
+{% block meta_title %}{{ caption }}{% endblock %}
 
 
 {% block content %}
 
-    <h1>Mile wallets</h1>
+    <h1>{{ caption }}</h1>
 
     <div class="row" style="margin-bottom: 10px">
         <div class="col-md-2">
             {{ page_before(paginator) }}
             {{ page_after(paginator) }}
+        </div>
+        <div class="col-md-3">
+            {% if type %}
+                <a href="/addresses" class="btn btn-dark btn-sm">by date</a>
+            {% endif %}
+            {% if type!='top_miles' %}
+                <a href="/addresses/top/miles" class="btn btn-dark btn-sm">by miles</a>
+            {% endif %}
+            {% if type!='top_xdr' %}
+                <a href="/addresses/top/xdr" class="btn btn-dark btn-sm">by XDR</a>
+            {% endif %}
         </div>
     </div>
 

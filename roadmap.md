@@ -2,17 +2,19 @@
   - pagination
     - ~~prev/next/~~ goto date
   - filters
-    - fee/no fee
+    - ~~fee/no fee~~
     - with description
     - by wallet
   - in descr - address with reg node, rate with get rate, etc
 * Transaction page
+  - ~~first view~~
 * Blocks
   - pagination
     - prev/next/goto block/goto date
   - filters
     - no empty blocks
 * Block page
+  - ~~first view~~
 * Wallets
   - by date
   - top
@@ -22,7 +24,8 @@
     - by miles staked
     - by xdr staked
 * Wallet page
-  - last transactions and lint to transactions
+  - ~~last transactions and link to transactions~~
+  - node addr whois
 * Exchanges
   - exchanges transactions
 * Rate history (get rate)
