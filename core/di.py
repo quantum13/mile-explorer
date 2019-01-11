@@ -17,6 +17,8 @@ app.config.REQUEST_MAX_SIZE = 4000
 app.config.REQUEST_TIMEOUT = 15
 app.config.RESPONSE_TIMEOUT = 20
 
+app.config.ACCESS_LOG = False
+
 app.config.DB_HOST = DB_HOST
 app.config.DB_DATABASE = DB_NAME
 app.config.DB_USER = DB_USER
