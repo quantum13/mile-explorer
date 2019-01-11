@@ -25,7 +25,7 @@ async def error_page(request, exception):
 @app.exception(Exception)
 @jinja.template('error.html')
 async def error_page(request, exception):
-    logger.error(str(exception))
+    # logger.error(str(exception))
     return {}
 
 
