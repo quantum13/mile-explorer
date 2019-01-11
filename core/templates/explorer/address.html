@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% from 'explorer/macros.html' import txs_table %}
+{% from 'explorer/macros.html' import pretty_val %}
+
+{% block meta_title %}Mile wallet {{ w.pub_key }}{% endblock %}
+
+{% block content %}
+
+    <h1 style="word-break: break-all;">Mile wallet {{ w.pub_key }}</h1>
+
+
+    <table class="table table-hover table-sm">
+        <tbody>
+            <tr class="d-flex">
+                <td class="col-md-3">Miles</td>
+                <td class="col-md-9">{{ pretty_val(w.mile_balance) }}</td>
+            </tr>
+
+            {% if w.mile_staked %}
+                <tr class="d-flex">
+                    <td class="col-md-3">Miles staked</td>
+                    <td class="col-md-9">{{ pretty_val(w.mile_staked) }}</td>
+                </tr>
+            {% endif %}
+
+            <tr class="d-flex">
+                <td class="col-md-3">XDR</td>
+                <td class="col-md-9">{{ pretty_val(w.xdr_balance) }}</td>
+            </tr>
+
+            {% if w.xdr_staked %}
+                <tr class="d-flex">
+                    <td class="col-md-3">XDR staked</td>
+                    <td class="col-md-9">{{ pretty_val(w.xdr_staked) }}</td>
+                </tr>
+            {% endif %}
+
+            <tr class="d-flex">
+                <td class="col-md-3">First seen</td>
+                <td class="col-md-9">{{ w.created_at.strftime('%H:%M:%S %d.%m.%Y') }}</td>
+            </tr>
+
+            {% if w.is_node %}
+                <tr class="d-flex">
+                    <td class="col-md-3">Node address</td>
+                    <td class="col-md-9" style="word-break: break-all;">{{ w.node_address }}</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+    {% if txs_more %}
+        <h2>Last transactions</h2>
+    {% else %}
+        <h2>Transactions</h2>
+    {% endif %}
+
+    {{ txs_table(txs) }}
+
+    {% if txs_more %}
+        <a class="btn btn-dark float-right" href="/transactions/?addr={{ w.pub_key }}">All transactions &rarr;</a>
+    {% endif %}
+
+{% endblock %}

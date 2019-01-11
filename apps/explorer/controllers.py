@@ -51,6 +51,14 @@ async def transactions(request: Request):
     else:
         block_id = without_block_url = None
 
+    addr = request.raw_args.get('addr')
+    if addr and re.match('^[A-Za-z0-9]+$', addr):
+        query = query.where((Transaction.wallet_from==addr) | (Transaction.wallet_to==addr))
+
+        without_addr_url = url_without_qs_param(request.url, 'addr')
+    else:
+        addr = without_addr_url = None
+
     paginator = await get_paginator(request, query, [
         (Transaction.block_id, 'desc', str, int, '\d+'),
         (Transaction.num_in_block, 'desc', str, int, '-?\d+'),
@@ -60,11 +68,13 @@ async def transactions(request: Request):
         'paginator': paginator,
 
         'block_id': block_id,
-        'without_block_url': without_block_url
+        'without_block_url': without_block_url,
+        'addr': addr,
+        'without_addr_url': without_addr_url
     }
 
 
-@app.route("/transactions/<tx_digest:[A-Za-z0-9]+>")
+@app.route("/transactions/<tx_digest:[A-Za-z0-9_]+>")
 @jinja.template('explorer/transaction.html')
 async def transaction(request: Request, tx_digest):
 
@@ -77,7 +87,7 @@ async def transaction(request: Request, tx_digest):
 
 @app.route("/blocks/<block_id:int>")
 @jinja.template('explorer/block.html')
-async def transaction(request: Request, block_id):
+async def block(request: Request, block_id):
 
     b = await Block.get(int(block_id))
     if not b:
@@ -95,7 +105,7 @@ async def transaction(request: Request, block_id):
 
 @app.route("/blocks")
 @jinja.template('explorer/blocks.html')
-async def transactions(request: Request):
+async def blocks(request: Request):
 
     query = Block.query
 
@@ -108,7 +118,7 @@ async def transactions(request: Request):
 
 @app.route("/addresses")
 @jinja.template('explorer/addresses.html')
-async def transactions(request: Request):
+async def addresses(request: Request):
 
     query = Wallet.query
 
@@ -118,3 +128,20 @@ async def transactions(request: Request):
     ])
 
     return {'paginator': paginator}
+
+
+@app.route("/addresses/<addr:[A-Za-z0-9_]+>")
+@jinja.template('explorer/address.html')
+async def address(request: Request, addr):
+
+    w = await Wallet.get(addr)
+    if not w:
+        raise NotFound('Wallet not found')
+
+    txs = await Transaction.query.order_by(Transaction.block_id.desc(), Transaction.num_in_block.desc()) \
+        .where((Transaction.wallet_from==w.pub_key) | (Transaction.wallet_to==w.pub_key)).limit(11).gino.all()
+
+    return {
+        'w': w,
+        'txs': txs[:10], 'txs_more': len(txs)==11
+    }

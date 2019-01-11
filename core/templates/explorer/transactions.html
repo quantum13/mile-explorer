@@ -4,12 +4,12 @@
 {% from 'explorer/macros.html' import page_before %}
 {% from 'explorer/macros.html' import page_after %}
 
-{% block meta_title %}Mile transactions{% if block_id is not none %} of block #{{ block_id }}{% endif %}{% endblock %}
+{% block meta_title %}Mile transactions{% if block_id is not none %} of block #{{ block_id }}{% endif %}{% if addr is not none %} of wallet {{ addr }}{% endif %}{% endblock %}
 
 
 {% block content %}
 
-    <h1>Mile transactions{% if block_id is not none %} of block #{{ block_id }}<a href="{{ without_block_url }}">&times;</a>{% endif %}</h1>
+    <h1 style="word-break: break-all;">Mile transactions{% if block_id is not none %} of block #{{ block_id }}<a href="{{ without_block_url }}">&times;</a>{% endif %}{% if addr is not none %} of wallet {{ addr }}<a href="{{ without_addr_url }}">&times;</a>{% endif %}</h1>
 
     <div class="row" style="margin-bottom: 10px">
         <div class="col-md-2">

@@ -87,7 +87,6 @@ async def get_paginator(request: Request, query: Select, columns):
         slice_from = 0
 
     query = query.limit(limit)
-    print(query)
 
     all_items = await query.gino.all()
     items = all_items[slice_from:PAGE_SIZE+slice_from]
