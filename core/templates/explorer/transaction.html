@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% from 'explorer/macros.html' import tx_value %}
+{% from 'explorer/macros.html' import pretty_val %}
 
 {% block meta_title %}Mile transaction {{ tx.digest }}{% endblock %}
 
@@ -31,7 +33,7 @@
             {% if tx.fee %}
             <tr class="d-flex">
                 <td class="col-md-3">Fee</td>
-                <td class="col-md-9">{{ tx.fee }}</td>
+                <td class="col-md-9">{{ pretty_val(tx.fee) }}</td>
             </tr>
             {% endif %}
 
@@ -57,7 +59,6 @@
             {% endif %}
 
             {% if tx.mile or tx.xdr %}
-                {% from 'explorer/macros.html' import tx_value %}
                 <tr class="d-flex">
                     <td class="col-md-3">Value</td>
                     <td class="col-md-9">{{ tx_value(tx) }}</td>
@@ -74,7 +75,7 @@
             {% if tx.rate %}
             <tr class="d-flex">
                 <td class="col-md-3">Rate</td>
-                <td class="col-md-9">{{ tx.rate }}</td>
+                <td class="col-md-9">{{ pretty_val(tx.rate) }}</td>
             </tr>
             {% endif %}
 
