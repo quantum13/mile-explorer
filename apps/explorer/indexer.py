@@ -210,6 +210,7 @@ async def _check_genesis_block(fetch_tasks: deque):
         await block.create()
         for tx in txs:
             await tx.create()
+        await _make_wallets_dirty(txs)
 
     await _process_txs_wallets(fetch_tasks, txs)
 
@@ -323,10 +324,23 @@ async def _process_block(block_id, fetch_tasks: deque):
         await block.create()
         for tx in txs:
             await tx.create()
+        await _make_wallets_dirty(txs)
 
     await _process_txs_wallets(fetch_tasks, txs)
 
     return True
+
+
+async def _make_wallets_dirty(txs=None):
+    wallets = []
+    for tx in txs:
+        for wallet in (tx.wallet_from, tx.wallet_to):
+            if wallet:
+                wallets.append(wallet)
+
+    if wallets:
+        await Wallet.update.values(update_needed=True).where(
+            Wallet.pub_key.in_(wallets)).gino.status()
 
 
 async def _process_txs_wallets(fetch_tasks: deque, txs=None, pub_keys_with_ts=None):
