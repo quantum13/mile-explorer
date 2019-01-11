@@ -4,8 +4,8 @@ from decimal import Decimal
 
 import pytz
 from sanic.exceptions import NotFound
-from sanic.log import logger
 from sanic.request import Request
+from sanic.response import redirect
 
 from apps.explorer.models import Transaction, Block, Wallet
 from core.di import app, jinja
@@ -197,4 +197,31 @@ async def address(request: Request, addr):
     return {
         'w': w,
         'txs': txs[:10], 'txs_more': len(txs)==11
+    }
+
+
+#################################################################################
+
+
+@app.route("/search")
+@jinja.template('explorer/search.html')
+async def address(request: Request):
+    q = request.raw_args.get('q')
+
+    if re.match('^\d+$', q):
+        block = await Block.get(int(q))
+        if block:
+            return redirect(f"/blocks/{block.id}")
+
+    tx = await Transaction.get(q)
+    if tx:
+        return redirect(f"/transactions/{tx.digest}")
+
+    w = await Wallet.get(q)
+    if w:
+        return redirect(f"/addresses/{w.pub_key}")
+
+    return {
+        'q': q,
+        'result': {}
     }

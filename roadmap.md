@@ -1,10 +1,14 @@
+* Search
+  - ~~go to tx, wallet, block~~
+
 * Transactions
   - pagination
     - ~~prev/next/~~ goto date
   - filters
     - ~~fee/no fee~~
     - with description
-    - by wallet
+    - ~~by wallet~~
+    - by type
   - in descr - address with reg node, rate with get rate, etc
 * Transaction page
   - ~~first view~~
@@ -48,3 +52,4 @@
 * Indexer
   - process dirty wallets 1 time/1min
   - fee & bp emission tx separated
+  ! 2modesm start, work, different pool of pg
