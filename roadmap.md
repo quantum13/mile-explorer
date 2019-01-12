@@ -1,6 +1,5 @@
 * Search
   - ~~go to tx, wallet, block~~
-
 * Transactions
   - pagination
     - ~~prev/next/~~ goto date
@@ -23,8 +22,8 @@
   - by date
   - top
     - total (miles*rate + xdr)
-    - by miles
-    - by xdr
+    - ~~by miles~~
+    - ~~by xdr~~
     - by miles staked
     - by xdr staked
 * Wallet page
@@ -34,16 +33,24 @@
   - exchanges transactions
 * Rate history (get rate)
   - current rate to home
-* Charts
+* BP page
+  - by fee income
+  - by tx signed
+* Charts & stats
   - block producers income
+  - total miles & xdr
+  - total blocks by days
+  - total bp income by days
+  - interest rate for 100k sstaked
 * Strange tx
   - date
   - description
+  - long period between blocks
 * wallet alias
 * wallet comments
 ----
 * Infra
-  - docker compose
+  - docker compose (nginx, ssl, redirects)
   - service
 ----
 * Logging
@@ -53,3 +60,4 @@
   - process dirty wallets 1 time/1min
   - fee & bp emission tx separated
   - ~~2 modes, start, work, different pool of pg~~
+  !! healthcheck (1b miles)

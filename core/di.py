@@ -27,6 +27,8 @@ app.config.DB_PASSWORD = DB_PASSWORD
 app.config.DB_POOL_MIN_SIZE = SERVER_DB_POOL_MIN_SIZE
 app.config.DB_POOL_MAX_SIZE = SERVER_DB_POOL_MAX_SIZE
 
+app.config.DB_USE_CONNECTION_FOR_REQUEST = False
+
 Compress(app)  # must be before all response middleware
 db = Gino(app)
 

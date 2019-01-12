@@ -8,7 +8,7 @@ from dateutil.parser import parse
 from sqlalchemy.engine.url import URL
 
 from apps.explorer.models import Block, Wallet, Transaction
-from apps.mileapi.api import get_current_block, get_block, get_wallet
+from apps.mileapi.api import get_current_block, get_block, get_wallet, get_wallet_after_block
 from apps.mileapi.constants import TX_TYPES, TransferAssetsTransaction, RegisterNodeTransactionWithAmount
 from core.collections import unique_deque
 from core.common import utcnow
@@ -81,18 +81,25 @@ async def check_missing_wallets(fetch_tasks: deque):
         try:
 
             pub_keys = await db.all("""
-                select tx_wallets.pub_key, ts from (
-                    select pub_key, min(ts) as ts from (
-                        select wallet_from as pub_key, min(timestamp) as ts from transactions where wallet_from is not null group by wallet_from
-                        union 
-                        select wallet_to as pub_key, min(timestamp) as ts from transactions where wallet_to is not null group by wallet_to
-                    ) tx_wallets_inner
-                    group by pub_key
-                ) tx_wallets left join wallets on tx_wallets.pub_key=wallets.pub_key
+                select 
+                    tx_wallets.pub_key, ts, block_id
+                from 
+                    (
+                        select 
+                            pub_key, min(ts) as ts, max(block_id) as block_id 
+                        from 
+                            (
+                                select wallet_from as pub_key, min(timestamp) as ts, max(block_id) as block_id from transactions where wallet_from is not null group by wallet_from
+                                union 
+                                select wallet_to as pub_key, min(timestamp) as ts, max(block_id) as block_id from transactions where wallet_to is not null group by wallet_to
+                            ) tx_wallets_inner
+                        group by pub_key
+                    ) tx_wallets 
+                    left join wallets on tx_wallets.pub_key=wallets.pub_key
                 where wallets.pub_key is null
             """)
 
-            await _process_txs_wallets(fetch_tasks, pub_keys_with_ts=pub_keys)
+            await _process_txs_wallets(fetch_tasks, pub_keys_with_ts_blockid=pub_keys)
 
         except:
             pass
@@ -149,7 +156,10 @@ async def process_missing_blocks(fetch_tasks: deque):
         if block_id not in blocks_ids:
             fetch_tasks.append( (TASK_BLOCK, block_id) )
 
-    wallets = {row[0] for row in await Wallet.select('pub_key').where(Wallet.update_needed==True).gino.all()}
+    wallets = {
+        row[0] for row
+        in await Wallet.select('pub_key').where(Wallet.valid_before_block.isnot(None)).gino.all()
+    }
     for pub_key in wallets:
         fetch_tasks.append( (TASK_WALLET, pub_key) )
 
@@ -213,14 +223,12 @@ async def _check_genesis_block(fetch_tasks: deque):
         await block.create()
         for tx in txs:
             await tx.create()
-        await _make_wallets_dirty(txs)
+        await _make_wallets_dirty(txs, block.id)
 
     await _process_txs_wallets(fetch_tasks, txs)
 
 
 async def _process_wallet(pub_key):
-    data = await get_wallet(pub_key)
-
     wallet = await Wallet.get(pub_key)
     if not wallet:
         await db.status(
@@ -231,7 +239,15 @@ async def _process_wallet(pub_key):
             wallet
         )
         wallet = await Wallet.get(pub_key)
-    wallet.update_needed = False
+
+    block_id = wallet.valid_before_block
+    if block_id is not None:
+        data = await get_wallet_after_block(pub_key, block_id)
+    else:
+        logger.warning(f"Processing wallet without block_id check: {pub_key}")
+        data = await get_wallet(pub_key)
+
+    wallet.valid_before_block = None
     wallet.balance_updated_at = utcnow()
 
     if 'Node' in data.get('tags', []):
@@ -327,14 +343,14 @@ async def _process_block(block_id, fetch_tasks: deque):
         await block.create()
         for tx in txs:
             await tx.create()
-        await _make_wallets_dirty(txs)
+        await _make_wallets_dirty(txs, block.id)
 
     await _process_txs_wallets(fetch_tasks, txs)
 
     return True
 
 
-async def _make_wallets_dirty(txs=None):
+async def _make_wallets_dirty(txs, block_id):
     wallets = []
     for tx in txs:
         for wallet in (tx.wallet_from, tx.wallet_to):
@@ -342,29 +358,30 @@ async def _make_wallets_dirty(txs=None):
                 wallets.append(wallet)
 
     if wallets:
-        await Wallet.update.values(update_needed=True).where(
+        await Wallet.update.values(valid_before_block=block_id).where(
             Wallet.pub_key.in_(wallets)).gino.status()
 
 
-async def _process_txs_wallets(fetch_tasks: deque, txs=None, pub_keys_with_ts=None):
-    assert txs is not None or pub_keys_with_ts is not None
+async def _process_txs_wallets(fetch_tasks: deque, txs=None, pub_keys_with_ts_blockid=None):
+    assert txs is not None or pub_keys_with_ts_blockid is not None
 
-    if pub_keys_with_ts is None:
-        pub_keys_with_ts = []
+    if pub_keys_with_ts_blockid is None:
+        pub_keys_with_ts_blockid = []
     if txs is not None:
         for tx in txs:
             for wallet in (tx.wallet_from, tx.wallet_to):
                 if wallet:
-                    pub_keys_with_ts.append((wallet, tx.timestamp))
+                    pub_keys_with_ts_blockid.append((wallet, tx.timestamp, tx.block_id))
 
-    for wallet, ts in pub_keys_with_ts:
+    for wallet, ts, block_id in pub_keys_with_ts_blockid:
         await db.status(
             """
                 insert into wallets (pub_key, created_at) 
-                values ($1, $2) on conflict (pub_key) do update set update_needed=true
+                values ($1, $2) on conflict (pub_key) do update set valid_before_block=$3
             """,
             wallet,
-            ts
+            ts,
+            block_id
         )
         fetch_tasks.append( (TASK_WALLET, wallet) )
 

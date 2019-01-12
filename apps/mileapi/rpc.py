@@ -40,12 +40,13 @@ class Rpc:
         cls.__current_url_index += 1
         return cls.__urls[cls.__current_url_index % len(cls.__urls)] + cls.__path
 
-    async def exec(self):
+    async def exec(self, url=None) -> (dict, str):
         self.__payload["id"] = self.id
         data = json.dumps(self.__payload)
         self.id += 1
 
-        url = await self.get_url()
+        if not url:
+            url = await self.get_url()
         response = await (await self.__session.post(
             url,
             data=data,
@@ -56,4 +57,4 @@ class Rpc:
         if error:
             raise Exception(error['message'])
 
-        return response['result']
+        return response['result'], url
