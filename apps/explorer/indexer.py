@@ -376,12 +376,12 @@ async def _process_txs_wallets(fetch_tasks: deque, txs=None, pub_keys_with_ts_bl
     for wallet, ts, block_id in pub_keys_with_ts_blockid:
         await db.status(
             """
-                insert into wallets (pub_key, created_at) 
-                values ($1, $2) on conflict (pub_key) do update set valid_before_block=$3
+                insert into wallets (pub_key, created_at, valid_before_block) 
+                values ($1, $2, $3) on conflict (pub_key) do update set valid_before_block=$4
             """,
             wallet,
             ts,
-            block_id
+            block_id, block_id
         )
         fetch_tasks.append( (TASK_WALLET, wallet) )
 
