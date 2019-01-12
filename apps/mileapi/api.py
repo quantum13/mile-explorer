@@ -20,6 +20,6 @@ async def get_wallet(pub_key):
 
 
 async def get_wallet_after_block(pub_key, block_id):
-    block, url = Rpc('get-block', params={"block-id": block_id}).exec()
-    wallet, _ = Rpc('get-wallet-state', params={"public-key": pub_key}).exec(url)
+    block, url = await Rpc('get-block', params={"block-id": block_id}).exec()
+    wallet, _ = await Rpc('get-wallet-state', params={"public-key": pub_key}).exec(url)
     return wallet

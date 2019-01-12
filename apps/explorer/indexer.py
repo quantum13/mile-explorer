@@ -233,10 +233,10 @@ async def _process_wallet(pub_key):
     if not wallet:
         await db.status(
             """
-                insert into wallets (pub_key, created_at) 
-                values ($1, now()) on conflict (pub_key) do nothing 
+                insert into wallets (pub_key, created_at, valid_before_block) 
+                values ($1, now(), null) on conflict (pub_key) do nothing 
             """,
-            wallet
+            pub_key
         )
         wallet = await Wallet.get(pub_key)
 
@@ -244,7 +244,7 @@ async def _process_wallet(pub_key):
     if block_id is not None:
         data = await get_wallet_after_block(pub_key, block_id)
     else:
-        logger.warning(f"Processing wallet without block_id check: {pub_key}")
+        logger.warning(f"Processing wallet without block_id check: {pub_key}. Update created_at")
         data = await get_wallet(pub_key)
 
     wallet.valid_before_block = None
