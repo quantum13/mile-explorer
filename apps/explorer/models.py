@@ -14,8 +14,8 @@ class Wallet(db.Model):
     mile_staked = sa.Column(sa.DECIMAL(19, 5), nullable=False, server_default='0')
     xdr_balance = sa.Column(sa.DECIMAL(19, 2), nullable=False, server_default='0')
     xdr_staked = sa.Column(sa.DECIMAL(19, 2), nullable=False, server_default='0')
-    created_at = sa.Column(TIMESTAMP(precision=0, timezone=True), nullable=False)
-    balance_updated_at = sa.Column(TIMESTAMP(precision=0, timezone=True), default=None)
+    created_at = sa.Column(TIMESTAMP(precision=0, timezone=False), nullable=False)
+    balance_updated_at = sa.Column(TIMESTAMP(precision=0, timezone=False), default=None)
     valid_before_block = sa.Column(sa.BigInteger, nullable=True)
 
     is_node = sa.Column(sa.Boolean, nullable=False, default=False, server_default='false')
@@ -40,7 +40,7 @@ class Block(db.Model):
 
     previous_block_digest = sa.Column(sa.String(52), nullable=False)
     merkle_root = sa.Column(sa.String(52), nullable=False)
-    timestamp = sa.Column(TIMESTAMP(precision=0, timezone=True), nullable=False)
+    timestamp = sa.Column(TIMESTAMP(precision=0, timezone=False), nullable=False)
     transactions_count = sa.Column(sa.Integer, nullable=False, server_default='0')
     number_of_signers = sa.Column(sa.Integer, nullable=False, server_default='0')
     round = sa.Column(sa.SmallInteger, nullable=False, server_default='0')
@@ -61,7 +61,7 @@ class Transaction(db.Model):
 
     block_id = sa.Column(sa.BigInteger, nullable=False)
     num_in_block = sa.Column(sa.Integer, nullable=False)
-    timestamp = sa.Column(TIMESTAMP(precision=0, timezone=True), nullable=False)
+    timestamp = sa.Column(TIMESTAMP(precision=0, timezone=False), nullable=False)
 
     global_num = sa.Column(sa.DECIMAL(22, 0), nullable=False)
     is_fee = sa.Column(sa.Boolean, nullable=False, default=False)
