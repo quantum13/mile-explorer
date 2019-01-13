@@ -11,7 +11,6 @@ from apps.explorer.models import Block, Wallet, Transaction
 from apps.mileapi.api import get_current_block, get_block, get_wallet, get_wallet_after_block
 from apps.mileapi.constants import TX_TYPES, TransferAssetsTransaction, RegisterNodeTransactionWithAmount
 from core.collections import unique_deque
-from core.common import utcnow
 from core.config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, INDEXER_DB_POOL_MIN_SIZE, INDEXER_DB_POOL_MAX_SIZE, \
     INDEXER_TASKS_LIMIT, \
     GENESIS_BLOCK
@@ -177,7 +176,7 @@ async def _check_genesis_block(fetch_tasks: deque):
         version=1,
         previous_block_digest='',
         merkle_root='',
-        timestamp=datetime(2017, 12, 31, 12, 0, 0).replace(tzinfo=pytz.utc),
+        timestamp=datetime(2017, 12, 31, 12, 0, 0),
         transactions_count=0,
         number_of_signers=0,
         round=0,
@@ -248,7 +247,7 @@ async def _process_wallet(pub_key):
         data = await get_wallet(pub_key)
 
     wallet.valid_before_block = None
-    wallet.balance_updated_at = utcnow()
+    wallet.balance_updated_at = datetime.utcnow()
 
     if 'Node' in data.get('tags', []):
         wallet.is_node = True
@@ -278,7 +277,7 @@ async def _process_block(block_id, fetch_tasks: deque):
         version=int(data["version"]),
         previous_block_digest=data["previous-block-digest"],
         merkle_root=data["merkle-root"],
-        timestamp=parse(data["timestamp"]).replace(tzinfo=pytz.utc),
+        timestamp=parse(data["timestamp"]),
         transactions_count=int(data["transaction-count"]),
         number_of_signers=int(data["number-of-signers"]),
         round=int(data["round"]),
