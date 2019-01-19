@@ -36,8 +36,8 @@
             {% endif %}
 
             <tr class="d-flex">
-                <td class="col-md-3">First seen</td>
-                <td class="col-md-9">{{ w.created_at.strftime('%H:%M:%S %d.%m.%Y') }}</td>
+                <td class="col-md-3">Created at block</td>
+                <td class="col-md-9"><a href="/blocks/{{ first_block_id }}">{{ first_block_id }}</a></td>
             </tr>
 
             {% if w.is_node %}

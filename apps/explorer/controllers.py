@@ -194,9 +194,13 @@ async def address(request: Request, addr):
     txs = await Transaction.query.order_by(Transaction.block_id.desc(), Transaction.num_in_block.desc()) \
         .where((Transaction.wallet_from==w.pub_key) | (Transaction.wallet_to==w.pub_key)).limit(11).gino.all()
 
+    first_tx: Transaction = await Transaction.query.order_by(Transaction.block_id.asc()) \
+        .where((Transaction.wallet_from == w.pub_key) | (Transaction.wallet_to == w.pub_key)).limit(1).gino.first()
+
     return {
         'w': w,
-        'txs': txs[:10], 'txs_more': len(txs)==11
+        'txs': txs[:10], 'txs_more': len(txs)==11,
+        'first_block_id': first_tx.block_id
     }
 
 
