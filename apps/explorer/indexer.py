@@ -56,6 +56,7 @@ def start(stage=2):
     asyncio.ensure_future(check_new_blocks(fetch_tasks))
     asyncio.ensure_future(handle_fetch_tasks(fetch_tasks, stage))  # INDEXER_TASKS_LIMIT connects
     asyncio.ensure_future(check_missing_wallets(fetch_tasks))  # 1 connect
+    asyncio.ensure_future(fix_unreal_date()) # 1 connect
 
     loop.run_forever()
 
@@ -72,6 +73,37 @@ async def check_new_blocks(fetch_tasks: deque):
             last_processed_block_id = last_block
         except:
             pass
+
+
+async def fix_unreal_date():
+    global last_processed_block_id
+    while True:
+        await asyncio.sleep(120)
+        try:
+            ids = await db.all("select id, timestamp from blocks where timestamp < '2018-01-01'")
+            for block_id in reversed(ids):
+                block_id, old_ts = block_id
+                async with db.transaction():
+                    ts = await db.first(
+                        "select timestamp from blocks where id=$1+1 and timestamp > '2018-01-01'",
+                        block_id
+                    )
+                    if not ts:
+                        continue
+                    ts = ts[0]
+
+                    logger.info(f"Updating unreal ts: block {block_id}, old_ts {old_ts}")
+                    await db.status(
+                        "update blocks set timestamp_real=timestamp, timestamp=$1::timestamp-interval '20 sec' where id=$2",
+                        ts, block_id
+                    )
+                    await db.status(
+                        "update transactions set timestamp_real=timestamp, timestamp=$1::timestamp-interval '20 sec' where block_id=$2",
+                        ts, block_id
+                    )
+
+        except Exception as e:
+            logger.exception(f"fix_unreal_date: {e}")
 
 
 async def check_missing_wallets(fetch_tasks: deque):
