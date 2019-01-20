@@ -7,12 +7,11 @@ from sanic.exceptions import NotFound
 from sanic.request import Request
 from sanic.response import redirect
 
-from apps.explorer.models import Transaction, Block, Wallet
+from apps.explorer.models import Transaction, Block, Wallet, MonthStat, DayStat
 from core.di import app, jinja
 from core.logging import setup_logging
 from core.pagination import get_paginator
 from core.utils import url_without_qs_param
-
 
 logger = setup_logging('explorer.controllers')
 
@@ -43,8 +42,10 @@ async def error_page(request, exception):
 @app.route("/")
 @jinja.template('index.html')
 async def main(request):
+    stat = await MonthStat.query.order_by(MonthStat.date.desc()).limit(1).gino.first()
+
     return {
-        'main': 'hello'
+        'stat': stat
     }
 
 
@@ -251,3 +252,52 @@ async def address(request: Request):
         'q': q,
         'result': {}
     }
+
+
+#################################################################################
+
+
+@app.route("/statistics")
+@jinja.template('explorer/statistics/statistics.html')
+async def address(request: Request):
+    return {}
+
+
+@app.route("/statistics/turnover")
+@jinja.template('explorer/statistics/turnover.html')
+async def address(request: Request):
+    day = await DayStat.query.order_by(DayStat.date).gino.all()
+    month = await MonthStat.query.order_by(MonthStat.date).gino.all()
+    return {'day': day, 'month': month}
+
+
+@app.route("/statistics/tx_count")
+@jinja.template('explorer/statistics/tx_count.html')
+async def address(request: Request):
+    day = await DayStat.query.order_by(DayStat.date).gino.all()
+    month = await MonthStat.query.order_by(MonthStat.date).gino.all()
+    return {'day': day, 'month': month}
+
+
+@app.route("/statistics/blocks_count")
+@jinja.template('explorer/statistics/blocks_count.html')
+async def address(request: Request):
+    day = await DayStat.query.order_by(DayStat.date).gino.all()
+    month = await MonthStat.query.order_by(MonthStat.date).gino.all()
+    return {'day': day, 'month': month}
+
+
+@app.route("/statistics/addresses/active")
+@jinja.template('explorer/statistics/addresses_active.html')
+async def address(request: Request):
+    day = await DayStat.query.order_by(DayStat.date).gino.all()
+    month = await MonthStat.query.order_by(MonthStat.date).gino.all()
+    return {'day': day, 'month': month}
+
+
+@app.route("/statistics/nodes/income")
+@jinja.template('explorer/statistics/nodes_income.html')
+async def address(request: Request):
+    day = await DayStat.query.order_by(DayStat.date).gino.all()
+    month = await MonthStat.query.order_by(MonthStat.date).gino.all()
+    return {'day': day, 'month': month}

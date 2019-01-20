@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from 'explorer/macros.html' import pretty_val %}
+
+
+{% block meta_title %}Mile statistics{% endblock %}
+
+{% block content %}
+<div class="row">
+
+<div class="col-md-12">
+    <h2>Mile statistics</h2>
+    <table class="table">
+        <tbody>
+        <tr>
+            <td><a href="/statistics/turnover">Turnover</a></td>
+        </tr>
+        <tr>
+            <td><a href="/statistics/tx_count">Transactions count</a></td>
+        </tr>
+        <tr>
+            <td><a href="/statistics/blocks_count">Blocks count</a></td>
+        </tr>
+        <tr>
+            <td><a href="/statistics/addresses/active">Active addresses</a></td>
+        </tr>
+        <tr>
+            <td><a href="/statistics/nodes/income">Nodes income</a></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</div>
+{% endblock %}

@@ -2,7 +2,7 @@
 
 Revision ID: 0005
 Revises: 0004
-Create Date: 2019-01-20 18:04:57.504021
+Create Date: 2019-01-20 23:25:07.459812
 
 """
 from alembic import op
@@ -31,6 +31,7 @@ def upgrade():
     sa.Column('active_wallets_count', sa.Integer(), nullable=True),
     sa.Column('wallets_count', sa.Integer(), nullable=True),
     sa.Column('nonempty_wallets_count', sa.Integer(), nullable=True),
+    sa.Column('nodes_count', sa.Integer(), nullable=True),
     sa.PrimaryKeyConstraint('date')
     )
     op.create_table('stat_month',
@@ -46,6 +47,7 @@ def upgrade():
     sa.Column('active_wallets_count', sa.Integer(), nullable=True),
     sa.Column('wallets_count', sa.Integer(), nullable=True),
     sa.Column('nonempty_wallets_count', sa.Integer(), nullable=True),
+    sa.Column('nodes_count', sa.Integer(), nullable=True),
     sa.PrimaryKeyConstraint('date')
     )
     op.add_column('blocks', sa.Column('timestamp_real', postgresql.TIMESTAMP(precision=0), nullable=True))

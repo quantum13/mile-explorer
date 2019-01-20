@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% from 'explorer/macros.html' import pretty_val %}
+
 
 {% block meta_title %}mile_tools{% endblock %}
 
@@ -8,8 +10,32 @@
     We have transactions from <a href="/blocks/0">genesis block</a>, <a href="/addresses/top/miles">top wallets by miles</a> or <a href="/addresses/top/xdr">XDR</a> and other cool tools. Stay tuned.
 </div>
 <div class="col-md-8">
-    <h2>Official mile twitter</h2>
-    <a class="twitter-timeline" data-theme="light" href="https://twitter.com/mile_global?ref_src=twsrc%5Etfw">Tweets by mile_global</a> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+    <h2>Network statistics</h2>
+    <table class="table">
+        <tbody>
+        <tr>
+            <td>Total miles</td>
+            <td>{{ pretty_val(1000000000) }}</td>
+        </tr>
+        <tr>
+            <td>Total XDR</td>
+            <td>{{ pretty_val(stat.total_xdr) }}</td>
+        </tr>
+        <tr>
+            <td>Wallets count</td>
+            <td>{{ pretty_val(stat.wallets_count) }}</td>
+        </tr>
+        <tr>
+            <td>Nonempty wallets count</td>
+            <td>{{ pretty_val(stat.nonempty_wallets_count) }}</td>
+        </tr>
+        <tr>
+            <td><a href="/addresses?is_node=1">Block producers (nodes) count</a></td>
+            <td>{{ pretty_val(stat.nodes_count) }}</td>
+        </tr>
+        </tbody>
+    </table>
+    <a href="/statistics" class="float-right btn btn-dark btn-sm">More statistics &rarr;</a>
 </div>
 </div>
 {% endblock %}

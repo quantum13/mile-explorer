@@ -33,7 +33,7 @@
             {% if type!='top_xdr' %}
                 <a href="/addresses/top/xdr" class="btn btn-dark btn-sm">by XDR</a>
             {% endif %}
-            {% if not with__is_node %}
+            {% if not with__is_node and not type %}
                 <a href="{{ with__is_node__url }}" class="btn btn-dark btn-sm">only nodes</a>
             {% endif %}
         </div>

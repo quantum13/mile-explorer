@@ -10,7 +10,7 @@ logger = setup_logging('indexer_stat')
 
 async def calc_statistics():
     while True:
-        await asyncio.sleep(60 * 0)
+        await asyncio.sleep(60 * 1)
         start = datetime.now()
 
         await db.status("delete from stat_day where date < '2018-01-01'")
@@ -213,13 +213,14 @@ async def calc_xdr_count():
             await asyncio.sleep(0.6)
             await db.status(
                 """
-                    insert into stat_day (date, total_xdr, wallets_count, nonempty_wallets_count)
+                    insert into stat_day (date, total_xdr, wallets_count, nonempty_wallets_count, nodes_count)
                         select 
                             date((now() at time zone 'utc')) as ts_day, 
                             sum(xdr_balance) as total_xdr,
                             count(pub_key) as wallets_count,
                             sum(case when mile_balance>0 or xdr_balance>0 then 1 else 0 end) 
-                                as nonempty_wallets_count
+                                as nonempty_wallets_count,
+                            sum(case when is_node then 1 else 0 end) as nodes_count
                         from 
                             wallets
                         having
@@ -228,19 +229,21 @@ async def calc_xdr_count():
                     do update set 
                         total_xdr=excluded.total_xdr,
                         wallets_count=excluded.wallets_count,
-                        nonempty_wallets_count=excluded.nonempty_wallets_count
+                        nonempty_wallets_count=excluded.nonempty_wallets_count,
+                        nodes_count=excluded.nodes_count
                 """
             )
 
             await db.status(
                 """
-                    insert into stat_month (date, total_xdr, wallets_count, nonempty_wallets_count)
+                    insert into stat_month (date, total_xdr, wallets_count, nonempty_wallets_count, nodes_count)
                         select 
                             date_trunc('month', (now() at time zone 'utc')) as ts_month, 
                             sum(xdr_balance) as total_xdr,
                             count(pub_key) as wallets_count,
                             sum(case when mile_balance>0 or xdr_balance>0 then 1 else 0 end) 
-                                as nonempty_wallets_count
+                                as nonempty_wallets_count,
+                            sum(case when is_node then 1 else 0 end) as nodes_count
                         from 
                             wallets
                         having
@@ -249,7 +252,8 @@ async def calc_xdr_count():
                     do update set 
                         total_xdr=excluded.total_xdr,
                         wallets_count=excluded.wallets_count,
-                        nonempty_wallets_count=excluded.nonempty_wallets_count
+                        nonempty_wallets_count=excluded.nonempty_wallets_count,
+                        nodes_count=excluded.nodes_count
                 """
             )
     except Exception as e:

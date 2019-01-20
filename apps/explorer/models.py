@@ -109,6 +109,7 @@ class DayStat(db.Model):
     active_wallets_count = sa.Column(sa.Integer)
     wallets_count = sa.Column(sa.Integer)
     nonempty_wallets_count = sa.Column(sa.Integer)
+    nodes_count = sa.Column(sa.Integer)
 
 
 class MonthStat(db.Model):
@@ -125,3 +126,4 @@ class MonthStat(db.Model):
     active_wallets_count = sa.Column(sa.Integer)
     wallets_count = sa.Column(sa.Integer)
     nonempty_wallets_count = sa.Column(sa.Integer)
+    nodes_count = sa.Column(sa.Integer)

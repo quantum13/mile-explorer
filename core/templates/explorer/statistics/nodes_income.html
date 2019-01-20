@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% from 'explorer/macros.html' import pretty_val %}
+
+
+{% block meta_title %}Mile nodes (block producers) income{% endblock %}
+
+{% block content %}
+<div class="row">
+
+<div class="col-md-12">
+    <h1>Mile nodes (block producers) income</h1>
+
+    <h2 style="margin: 30px auto">Monthly</h2>
+    <div class="ct-chart ct-perfect-fourth" id="monthly"></div>
+
+    <h2 style="margin: 20px auto">Daily</h2>
+    <div class="ct-chart ct-perfect-fourth" id="daily"></div>
+
+</div>
+</div>
+{% endblock %}
+
+{% block js %}
+    {{ super() }}
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.23.0/moment.min.js"
+            crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
+    <script src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/chartist-plugin-legend/0.6.2/chartist-plugin-legend.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/chartist-plugin-tooltips@0.0.17/dist/chartist-plugin-tooltip.min.js"></script>
+
+    <script>
+      $(document).ready(function () {
+        var chart = new Chartist.Line('#monthly', {
+          labels: [{% for d in month %}'{{ d.date.strftime('%m.%Y') }}',{% endfor %}],
+          series: [
+            {
+              name: 'XDR',
+              data: [
+                {% for d in month %}
+                    {x: new Date('{{d.date}}'), y: {{ d.bp_xdr_income }}},
+                {% endfor %}
+              ]
+            },
+            {
+              name: 'Miles',
+              data: [
+                {% for d in month %}
+                    {x: new Date('{{d.date}}'), y: {{ d.bp_mile_income }}},
+                {% endfor %}
+              ]
+            }
+          ]
+        }, {
+          fullWidth: true,
+          plugins: [
+            Chartist.plugins.legend(),
+            Chartist.plugins.tooltip({
+              transformTooltipTextFnc: function (tooltip) {
+                var xy = tooltip.split(",");
+                return moment.unix(xy[0]/1000).format('MM.YYYY') + ', ' + xy[1];
+              }
+            }),
+          ]
+        });
+      })
+
+      $(document).ready(function () {
+        var chart = new Chartist.Line('#daily', {
+          series: [
+            {
+              name: 'XDR',
+              data: [
+                {% for d in day[1:] %}
+                    {x: new Date('{{d.date}}'), y: {{ d.bp_xdr_income }}},
+                {% endfor %}
+              ]
+            },
+            {
+              name: 'Miles',
+              data: [
+                {% for d in day[1:] %}
+                    {x: new Date('{{d.date}}'), y: {{ d.bp_mile_income }}},
+                {% endfor %}
+              ]
+            }
+          ]
+        }, {
+          axisX: {
+            type: Chartist.FixedScaleAxis,
+            divisor: 5,
+            labelInterpolationFnc: function (value) {
+              return moment(value).format('MMM D');
+            }
+          },
+          fullWidth: true,
+
+          plugins: [
+            Chartist.plugins.legend(),
+            Chartist.plugins.tooltip({
+              transformTooltipTextFnc: function (tooltip) {
+                var xy = tooltip.split(",");
+                return moment.unix(xy[0]/1000).format('DD.MM.YYYY') + ', ' + xy[1];
+              }
+            }),
+          ]
+        });
+      })
+
+    </script>
+{% endblock %}
+{% block meta_style %}
+
+.chartist-tooltip {
+  position: absolute;
+  display: inline-block;
+  opacity: 0;
+  min-width: 5em;
+  padding: .5em;
+  background: #F4C63D;
+  color: #453D3F;
+  font-family: Oxygen,Helvetica,Arial,sans-serif;
+  font-weight: 700;
+  text-align: center;
+  pointer-events: none;
+  z-index: 1;
+  -webkit-transition: opacity .2s linear;
+  -moz-transition: opacity .2s linear;
+  -o-transition: opacity .2s linear;
+  transition: opacity .2s linear; }
+  .chartist-tooltip:before {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    margin-left: -15px;
+    border: 15px solid transparent;
+    border-top-color: #F4C63D; }
+  .chartist-tooltip.tooltip-show {
+    opacity: 1; }
+
+.ct-area, .ct-line {
+  pointer-events: none; }
+
+    .ct-chart {
+    margin: auto;
+    max-height: 400px;
+}
+       .ct-legend {
+           position: relative;
+           z-index: 10;
+           list-style: none;
+           text-align: center;
+       }
+       .ct-legend li {
+           position: relative;
+           padding-left: 23px;
+           margin-right: 10px;
+           margin-bottom: 3px;
+           cursor: pointer;
+           display: inline-block;
+       }
+       .ct-legend li:before {
+           width: 12px;
+           height: 12px;
+           position: absolute;
+           left: 0;
+           content: '';
+           border: 3px solid transparent;
+           border-radius: 2px;
+       }
+       .ct-legend li.inactive:before {
+           background: transparent;
+       }
+       .ct-legend.ct-legend-inside {
+           position: absolute;
+           top: 0;
+           right: 0;
+       }
+       .ct-legend.ct-legend-inside li{
+           display: block;
+           margin: 0;
+       }
+       .ct-legend .ct-series-0:before {
+           background-color: #d70206;
+           border-color: #d70206;
+       }
+       .ct-legend .ct-series-1:before {
+           background-color: #f05b4f;
+           border-color: #f05b4f;
+       }
+       .ct-legend .ct-series-2:before {
+           background-color: #f4c63d;
+           border-color: #f4c63d;
+       }
+       .ct-legend .ct-series-3:before {
+           background-color: #d17905;
+           border-color: #d17905;
+       }
+       .ct-legend .ct-series-4:before {
+           background-color: #453d3f;
+           border-color: #453d3f;
+       }
+{% endblock %}
