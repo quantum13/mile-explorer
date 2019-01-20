@@ -27,6 +27,7 @@ class Wallet(db.Model):
     _idx4 = sa.Index('transactions__xdr_staked', 'xdr_staked')
     _idx5 = sa.Index('transactions__created_at', 'created_at')
     _idx6 = sa.Index('transactions__valid_before_block', 'valid_before_block')
+    _idx7 = sa.Index('transactions__is_node', 'is_node')
 
     def __str__(self):
         return self.pub_key
@@ -101,9 +102,13 @@ class DayStat(db.Model):
     xdr_turnover = sa.Column(sa.DECIMAL(30, 2))
     tx_count = sa.Column(sa.Integer)
     blocks_count = sa.Column(sa.Integer)
+    nonempty_blocks_count = sa.Column(sa.Integer)
     bp_mile_income = sa.Column(sa.DECIMAL(30, 5))
     bp_xdr_income = sa.Column(sa.DECIMAL(30, 2))
     total_xdr = sa.Column(sa.DECIMAL(30, 2))
+    active_wallets_count = sa.Column(sa.Integer)
+    wallets_count = sa.Column(sa.Integer)
+    nonempty_wallets_count = sa.Column(sa.Integer)
 
 
 class MonthStat(db.Model):
@@ -113,6 +118,10 @@ class MonthStat(db.Model):
     xdr_turnover = sa.Column(sa.DECIMAL(30, 2))
     tx_count = sa.Column(sa.Integer)
     blocks_count = sa.Column(sa.Integer)
+    nonempty_blocks_count = sa.Column(sa.Integer)
     bp_mile_income = sa.Column(sa.DECIMAL(30, 5))
     bp_xdr_income = sa.Column(sa.DECIMAL(30, 2))
     total_xdr = sa.Column(sa.DECIMAL(30, 2))
+    active_wallets_count = sa.Column(sa.Integer)
+    wallets_count = sa.Column(sa.Integer)
+    nonempty_wallets_count = sa.Column(sa.Integer)

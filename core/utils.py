@@ -10,4 +10,9 @@ def url_without_qs_param(url, remove_params=None, replace_params: dict = None):
     if replace_params:
         for k, v in replace_params.items():
             qs[k] = v
-    return f"{url_parsed.path}?{urlencode(qs, True)}"
+
+    params = urlencode(qs, True)
+    result = url_parsed.path
+    if params:
+        result += f"?{params}"
+    return result

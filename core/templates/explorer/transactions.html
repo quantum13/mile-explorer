@@ -16,11 +16,11 @@
             {{ page_before(paginator) }}
             {{ page_after(paginator) }}
         </div>
-            <div class="col-md-2">
-                {% if not with_fee %}
-                    <a href="{{ with_fee_url }}" class="btn btn-dark btn-sm">With fee</a>
-                {% endif %}
-            </div>
+        <div class="col-md-2">
+            {% if not with_fee %}
+                <a href="{{ with_fee_url }}" class="btn btn-dark btn-sm">With fee</a>
+            {% endif %}
+        </div>
     </div>
 
     {{ txs_table(paginator.items) }}

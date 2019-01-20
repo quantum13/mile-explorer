@@ -41,7 +41,9 @@
   - total miles & xdr
   - total blocks by days
   - total bp income by days
-  - interest rate for 100k sstaked
+  - interest rate for 100k staked
+  - bp count (register-unregister)
+  - registered bp, realy worked bp
 * Strange tx
   - date
   - description

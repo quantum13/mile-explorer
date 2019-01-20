@@ -11,12 +11,12 @@
     {% set caption='Mile wallets' %}
 {% endif %}
 
-{% block meta_title %}{{ caption }}{% endblock %}
+{% block meta_title %}{{ caption }}{% if with__is_node %} of nodes{% endif %}{% endblock %}
 
 
 {% block content %}
 
-    <h1>{{ caption }}</h1>
+    <h1>{{ caption }}{% if with__is_node %} of nodes <a href="{{ without__is_node__url }}">&times;</a>{% endif %}</h1>
 
     <div class="row" style="margin-bottom: 10px">
         <div class="col-md-2">
@@ -32,6 +32,9 @@
             {% endif %}
             {% if type!='top_xdr' %}
                 <a href="/addresses/top/xdr" class="btn btn-dark btn-sm">by XDR</a>
+            {% endif %}
+            {% if not with__is_node %}
+                <a href="{{ with__is_node__url }}" class="btn btn-dark btn-sm">only nodes</a>
             {% endif %}
         </div>
     </div>

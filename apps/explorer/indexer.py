@@ -7,6 +7,7 @@ import pytz
 from dateutil.parser import parse
 from sqlalchemy.engine.url import URL
 
+from apps.explorer.indexer_stat.stat import calc_statistics
 from apps.explorer.models import Block, Wallet, Transaction
 from apps.mileapi.api import get_current_block, get_block, get_wallet, get_wallet_after_block
 from apps.mileapi.constants import TX_TYPES, TransferAssetsTransaction, RegisterNodeTransactionWithAmount
@@ -56,7 +57,8 @@ def start(stage=2):
     asyncio.ensure_future(check_new_blocks(fetch_tasks))
     asyncio.ensure_future(handle_fetch_tasks(fetch_tasks, stage))  # INDEXER_TASKS_LIMIT connects
     asyncio.ensure_future(check_missing_wallets(fetch_tasks))  # 1 connect
-    asyncio.ensure_future(fix_unreal_date()) # 1 connect
+    asyncio.ensure_future(fix_unreal_date())  # 1 connect
+    asyncio.ensure_future(calc_statistics())  # 1 connect
 
     loop.run_forever()
 
@@ -78,7 +80,7 @@ async def check_new_blocks(fetch_tasks: deque):
 async def fix_unreal_date():
     global last_processed_block_id
     while True:
-        await asyncio.sleep(120)
+        await asyncio.sleep(20)
         try:
             ids = await db.all("select id, timestamp from blocks where timestamp < '2018-01-01'")
             for block_id in reversed(ids):

@@ -9,8 +9,12 @@ from sanic.response import redirect
 
 from apps.explorer.models import Transaction, Block, Wallet
 from core.di import app, jinja
+from core.logging import setup_logging
 from core.pagination import get_paginator
 from core.utils import url_without_qs_param
+
+
+logger = setup_logging('explorer.controllers')
 
 
 #################################################################################
@@ -25,7 +29,11 @@ async def error_page(request, exception):
 @app.exception(Exception)
 @jinja.template('error.html')
 async def error_page(request, exception):
-    # logger.error(str(exception))
+    try:
+        logger.error(str(exception))
+    except:
+        pass
+
     return {}
 
 
@@ -51,19 +59,19 @@ async def transactions(request: Request):
 
     with_fee = request.raw_args.get('fee')
     if with_fee:
-        without_fee_url = url_without_qs_param(request.url, 'fee')
+        without_fee_url = url_without_qs_param(request.url, ['fee', 'after', 'before'])
         with_fee_url = None
     else:
         query = query.where(Transaction.is_fee==False)
         with_fee = without_fee_url = None
-        with_fee_url = url_without_qs_param(request.url, replace_params={'fee': 1})
+        with_fee_url = url_without_qs_param(request.url, ['after', 'before'], {'fee': 1})
 
     block_id = request.raw_args.get('block_id')
     if block_id and re.match('^\d+$', block_id):
         query = query.where(Transaction.block_id==int(block_id))
 
         block_id = int(block_id)
-        without_block_url = url_without_qs_param(request.url, 'block_id')
+        without_block_url = url_without_qs_param(request.url, ['block_id', 'after', 'before'])
     else:
         block_id = without_block_url = None
 
@@ -147,12 +155,26 @@ async def addresses(request: Request):
 
     query = Wallet.query
 
+    with__is_node = request.raw_args.get('is_node')
+    if with__is_node:
+        query = query.where(Wallet.is_node==True)
+        without__is_node__url = url_without_qs_param(request.url, ['is_node', 'after', 'before'])
+        with__is_node__url = None
+    else:
+        with__is_node = without__is_node__url = None
+        with__is_node__url = url_without_qs_param(request.url, ['after', 'before'], {'is_node': 1})
+
     paginator = await get_paginator(request, query, [
-        (Wallet.created_at, 'desc', lambda x: str(int(x.timestamp())), lambda x: datetime.utcfromtimestamp(int(x)).replace(tzinfo=pytz.utc), '\d+'),
+        (Wallet.created_at, 'desc', lambda x: str(int(x.replace(tzinfo=pytz.utc).timestamp())), lambda x: datetime.utcfromtimestamp(int(x)), '\d+'),
         (Wallet.pub_key, 'desc', str, str,'[A-Za-z0-9]+')
     ])
 
-    return {'paginator': paginator}
+    return {
+        'paginator': paginator,
+        'without__is_node__url': without__is_node__url,
+        'with__is_node__url': with__is_node__url,
+        'with__is_node': with__is_node
+    }
 
 
 @app.route("/addresses/top/miles")
