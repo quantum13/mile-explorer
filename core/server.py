@@ -8,7 +8,7 @@ def start():
     setup_logging('sanic.root', replace=True)
     setup_logging('sanic.error', replace=True)
     app.run(host='0.0.0.0', workers=SERVER_WORKERS_COUNT, port=SERVER_PORT, debug=DEBUG,
-            )#ssl={'cert': SSL_CERT, 'key': SSL_KEY})
+            ssl={'cert': SSL_CERT, 'key': SSL_KEY})
 
 
 
