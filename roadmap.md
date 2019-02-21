@@ -37,6 +37,7 @@
   - by fee income
   - by tx signed
 * Charts & stats
+  ! do not calc stat if more than 10 blocks unfetched
   - block producers income
   - total miles & xdr
   - total blocks by days

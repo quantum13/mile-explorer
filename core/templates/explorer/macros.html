@@ -5,9 +5,7 @@
     {% if tx.xdr %}XDR{% endif %}
 {% endmacro %}
 
-{% macro pretty_val(val) %}
-    {{ '{:,}'.format(val).replace(',', '&nbsp;').rstrip('0').rstrip('.') }}
-{% endmacro %}
+{% macro pretty_val(val) %}{% set val_formatted = '{:,}'.format(val).replace(',', '&nbsp;') %}{% set val_formatted = val_formatted.rstrip('0').rstrip('.') if '.' in val_formatted else val_formatted %}{{ val_formatted }}{% endmacro %}
 
 {% macro page_before(paginator) %}
     {% if paginator.before %}

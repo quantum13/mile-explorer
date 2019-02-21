@@ -3,6 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 
 import pytz
+from sanic import response
 from sanic.exceptions import NotFound
 from sanic.request import Request
 from sanic.response import redirect
@@ -34,6 +35,16 @@ async def error_page(request, exception):
         pass
 
     return {}
+
+
+#################################################################################
+
+
+@app.route("/api/v1/xdr_count")
+async def main(request):
+    stat: MonthStat = await MonthStat.query.order_by(MonthStat.date.desc()).limit(1).gino.first()
+
+    return response.text(stat.total_xdr)
 
 
 #################################################################################
