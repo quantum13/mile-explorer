@@ -36,5 +36,9 @@ class unique_deque(deque):
         for i in iterable:
             self.appendleft(i)
 
+    def remove(self, value):
+        super().remove(value)
+        self.items.remove(value)
+
     def __contains__(self, item):
         return item in self.items

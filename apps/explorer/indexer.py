@@ -1,9 +1,8 @@
 import asyncio
 from collections import deque
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 
-import pytz
 from dateutil.parser import parse
 from sqlalchemy.engine.url import URL
 
@@ -70,7 +69,7 @@ async def check_new_blocks(fetch_tasks: deque):
         try:
             last_block = await get_current_block()
             for block_id in range(last_processed_block_id+1, last_block+1):
-                fetch_tasks.append( (TASK_BLOCK, block_id) )
+                fetch_tasks.append( (TASK_BLOCK, block_id, datetime.now()) )
                 logger.info(f"Queued block: {block_id}, tasks: {_count_tasks(fetch_tasks)}")
             last_processed_block_id = last_block
         except:
@@ -143,7 +142,10 @@ async def check_missing_wallets(fetch_tasks: deque):
 def _count_tasks(fetch_tasks: deque):
     tasks_counts = {}
     for task in fetch_tasks:
-        tasks_counts[task[0]] = tasks_counts.get(task[0], 0) + 1
+        if task[2]<=datetime.now():
+            tasks_counts[f"{TASKS_NAMES[task[0]]}_actual"] = tasks_counts.get(f"{TASKS_NAMES[task[0]]}_actual", 0) + 1
+        else:
+            tasks_counts[f"{TASKS_NAMES[task[0]]}_future"] = tasks_counts.get(f"{TASKS_NAMES[task[0]]}_future", 0) + 1
     return tasks_counts
 
 
@@ -164,8 +166,12 @@ async def handle_fetch_tasks(fetch_tasks: deque, stage: int):
 
 
 def _fill_futures(futures: list, fetch_tasks: deque, stage: int):
-    while len(futures) < INDEXER_TASKS_LIMIT[stage] and len(fetch_tasks) > 0:
-        task_type, item_id = fetch_tasks.popleft()
+    actual_tasks = deque([t for t in fetch_tasks if t[2] <= datetime.now()])
+    while len(futures) < INDEXER_TASKS_LIMIT[stage] and len(actual_tasks) > 0:
+        task = actual_tasks.popleft()
+        fetch_tasks.remove(task)
+        task_type, item_id, after_time = task
+
         if task_type==TASK_BLOCK:
             coro = _process_block(item_id, fetch_tasks)
         elif task_type==TASK_WALLET:
@@ -174,7 +180,7 @@ def _fill_futures(futures: list, fetch_tasks: deque, stage: int):
             assert False
         f = asyncio.ensure_future(coro)
 
-        f.task = (task_type, item_id)
+        f.task = (task_type, item_id, after_time)
         futures.append(f)
 
 
@@ -187,14 +193,15 @@ async def process_missing_blocks(fetch_tasks: deque):
 
     for block_id in range(1, last_block+1):
         if block_id not in blocks_ids:
-            fetch_tasks.append( (TASK_BLOCK, block_id) )
+            fetch_tasks.append( (TASK_BLOCK, block_id, datetime.now()) )
 
     wallets = {
         row[0] for row
         in await Wallet.select('pub_key').where(Wallet.valid_before_block.isnot(None)).gino.all()
     }
     for pub_key in wallets:
-        fetch_tasks.append( (TASK_WALLET, pub_key) )
+        fetch_tasks.append( (TASK_WALLET, pub_key, datetime.now()) )
+        fetch_tasks.append( (TASK_WALLET, pub_key, datetime.now() + timedelta(minutes=10)) )
 
     logger.info(f"tasks: {_count_tasks(fetch_tasks)}")
 
@@ -275,7 +282,7 @@ async def _process_wallet(pub_key):
 
     block_id = wallet.valid_before_block
     if block_id is not None:
-        data = await get_wallet_after_block(pub_key, block_id + 1)  # time of 1 blocks for cache cleared
+        data = await get_wallet_after_block(pub_key, block_id)
     else:
         logger.warning(f"Processing wallet without block_id check: {pub_key}. Update created_at")
         data = await get_wallet(pub_key)
@@ -416,7 +423,8 @@ async def _process_txs_wallets(fetch_tasks: deque, txs=None, pub_keys_with_ts_bl
             ts,
             block_id, block_id
         )
-        fetch_tasks.append( (TASK_WALLET, wallet) )
+        fetch_tasks.append( (TASK_WALLET, wallet, datetime.now()) )
+        fetch_tasks.append( (TASK_WALLET, wallet, datetime.now()+timedelta(minutes=10)) )
 
 
 def _fill_tx_type_specific_data(tx, tx_data, block):
