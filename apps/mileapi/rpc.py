@@ -1,6 +1,7 @@
 import asyncio
 import atexit
 import json
+from random import choice
 
 import aiohttp
 
@@ -37,8 +38,9 @@ class Rpc:
 
             cls.__urls = await (await cls.__session.get(config.nodes_url)).json()
 
-        cls.__current_url_index += 1
-        return cls.__urls[cls.__current_url_index % len(cls.__urls)] + cls.__path
+        return choice(cls.__urls) + cls.__path
+        # cls.__current_url_index += 1
+        # return cls.__urls[cls.__current_url_index % len(cls.__urls)] + cls.__path
 
     async def exec(self, url=None) -> (dict, str):
         self.__payload["id"] = self.id
