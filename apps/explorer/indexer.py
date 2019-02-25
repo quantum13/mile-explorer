@@ -275,7 +275,7 @@ async def _process_wallet(pub_key):
 
     block_id = wallet.valid_before_block
     if block_id is not None:
-        data = await get_wallet_after_block(pub_key, block_id)
+        data = await get_wallet_after_block(pub_key, block_id + 5)  # time of 5 blocks for cache cleared
     else:
         logger.warning(f"Processing wallet without block_id check: {pub_key}. Update created_at")
         data = await get_wallet(pub_key)
